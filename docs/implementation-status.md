@@ -69,7 +69,7 @@ All specification corrections in [`docs/implementation-plan.md`](file:///c:/proj
 ## 4. Phase 0 Git Commits
 
 1. **Baseline Commit:** `ec650df` — `chore(baseline): establish pre-migration source baseline on migration branch`
-2. **Phase 0 Fix Commit:** (Pending commit of the 3 surgical ESLint fixes and `docs/implementation-status.md`)
+2. **Phase 0 Fix Commit:** `cca79ec` — `fix(phase-0): resolve 3 baseline ESLint errors and initialize implementation status`
 
 ---
 
