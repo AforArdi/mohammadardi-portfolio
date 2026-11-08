@@ -1,8 +1,8 @@
-# Implementation Status & Phase 0 Checkpoint
+# Implementation Status
 
 * **Author:** Antigravity (Senior Next.js Engineer)
-* **Date:** 2026-11-08
-* **Current Checkpoint:** Phase 0 Completed (Awaiting Codex Focused Review)
+* **Last Updated:** 2026-11-09
+* **Current Checkpoint:** Phase 1 implemented and verified locally; database and dashboard pending
 * **Active Branch:** `migration/nextjs-app-router`
 * **Repository Path:** `C:\projects\mohammadardi-portfolio`
 
@@ -81,8 +81,48 @@ All specification corrections in [`docs/implementation-plan.md`](file:///c:/proj
 
 ---
 
-## 6. Proposed Next Slice (Phase 1)
+## 6. Phase 1: Public Next.js Migration
 
-Upon Codex's approval of this Phase 0 checkpoint:
-* **Scope:** Next.js 15.5.29 App Router setup, React 19.3.1, `@types/react@19.3.0`, visual parity verification at all 5 reference viewports, and animation consolidation onto `framer-motion` (removing `gsap`, `lenis`, and `motion`).
-* **Boundary:** No database provisioning, no migrations, and no authentication setup until Phase 1 visual parity passes review.
+**Implemented by Codex on 2026-11-09**, following the owner's request to start building. Phase 0's clean branch and three recorded commits were verified before editing. The baseline-to-checkpoint diff contains the three lint fixes and status documentation.
+
+### Implementation
+
+- Replaced the Vite entry points and React Router/Helmet shell with `app/layout.tsx`, `app/(public)/layout.tsx`, `app/(public)/page.tsx`, and a real App Router 404 page.
+- Installed exact registry-verified `next@15.5.29`, `react@19.3.1`, `react-dom@19.3.1`, and React type packages `19.3.0`. Verified the Next.js advisory at <https://nextjs.org/blog/august-2026-security-release>; its patched 15.5 release is 15.5.24. Dependency existence and peer ranges were checked directly against the npm registry before installation.
+- Standardized on pnpm 10.34.5 and its lockfile; removed the npm and Bun lockfiles, Vite configuration, Lovable tagger, and unused old application entry files. The empty legacy `src/pages` directory was also removed because Next.js interpreted it as a Pages Router directory during route-type generation.
+- Removed GSAP, Lenis, the separate `motion` dependency, React Router, Helmet, and the unused global query provider. Animation uses Framer Motion in small client boundaries and CSS for brand glows. Server-rendered content remains visible before hydration and with JavaScript disabled.
+- Kept the dark palette, JetBrains Mono headings, Inter text, portrait, real project/certificate images, content, and working external link targets. Corrected the robotics certificate type to **Certificate of Participation**, matching the supplied certificate image.
+- Moved the floating social rail to the `xl` breakpoint and reserved an 80px content gutter. Shared sidebar/footer social rendering now comes from one module.
+- Replaced custom intercepted scrolling with native anchor navigation, fixed-header offsets, and a keyboard-accessible shadcn Sheet mobile menu. Added a skip link, visible focus indicators, improved muted-text contrast, and reduced-motion styles.
+- Used `next/image` for portrait, project images, and certificates, with bounded remote image paths and responsive sizes. Certificates use `object-contain`. Fonts are fetched at build time by `next/font/google` and served locally afterward.
+- Set canonical/Open Graph metadata to `https://mohammadardi.online`, removed the incorrect `ardi.dev` canonical, and added a branded icon, generated Open Graph image, sitemap, and robots metadata routes.
+- Adapted retained dialog, sheet, command, tabs, label, and Sonner components with explicit client boundaries. Updated next-themes to 0.4.6 and Vaul to 1.1.2 after checking their React 19 peer compatibility. Unused remaining shadcn source files are retained for the dashboard phase and do not enter the public page bundle.
+- Added strict TypeScript checks, matching Next.js ESLint rules, production start scripts, and local development instructions in `README.md`.
+
+**Directory choice:** App Router files live in the planned root `app/` directory. Existing reusable components remain under `src/components` to preserve established `@/` imports; their responsibilities match the plan's `components/public` mapping.
+
+### Verification
+
+| Check | Result |
+| :--- | :--- |
+| Production build | `pnpm build` passed; homepage pre-rendered as static content. First-load JavaScript reported by Next.js: **153 kB**. This is a build metric, not a Lighthouse score. |
+| Lint | `pnpm lint` passed without warnings or errors. |
+| Strict TypeScript | `pnpm typecheck` passed. Run separately after the build; building concurrently replaces generated `.next/types` files. |
+| Production HTTP checks | Home 200, unknown route 404, robots 200, sitemap 200, sharing PNG 200, branded SVG 200; expected content types verified. Canonical and actual project content present in the HTML response. |
+| Responsive browser checks | Passed at **375, 768, 1024, 1280, 1440px**. No horizontal overflow; all six content images loaded at every width; both fonts resolved. |
+| Mobile navigation | Menu opens; Escape closes it; selecting Projects closes the menu and lands below the fixed header (section top 112px in the 375px viewport). |
+| Social rail | Hidden below 1280px; visible at 1280/1440px with hero content starting at x=104px, clear of the rail. |
+| Reduced motion | Native scroll becomes `auto`; continuous portrait animation is effectively disabled. |
+| Without JavaScript | Hero and all three project cards remain present and visible in server-rendered HTML. |
+| Browser errors | No uncaught runtime exceptions in the verification run. |
+| Visual inspection | Full-page screenshots of all five viewports reviewed against the owner's supplied appearance; existing visual identity retained with intentional layout/accessibility improvements. This is a manual comparison, not a pixel-diff assertion. |
+
+Local verification artifacts are ignored under `ui-screenshots`: `phase1-browser-report.json`, `next-375.png`, `next-768.png`, `next-1024.png`, `next-1280.png`, and `next-1440.png`. They are available in this checkout and are not committed application assets.
+
+### Boundaries and Remaining Work
+
+- **Contact:** The existing EmailJS and reCAPTCHA public integration is retained, with accessible success/error feedback and an email fallback. Google verification failed to load in the local browser environment, so live CAPTCHA verification and message delivery were **not** verified. No message was sent during QA. The planned server-side contact action and Turnstile replacement remain Phase 5 work.
+- **CV:** The current real Google Drive CV target remains. Supabase PDF upload, dialog preview, streaming, and rate limits remain Phase 5 work.
+- **Backend:** No database was provisioned or modified; no authentication, MFA, storage buckets, dashboard, or CRUD APIs were added in Phase 1.
+- **Release:** No GitHub repository was created, no commit/push was performed for these changes, and no deployment or DNS change occurred. Suggested repository name: `mohammadardi-portfolio`.
+- **Next slice:** Phase 2 defines the dedicated Supabase Postgres schema, limited runtime/migration roles, Drizzle migrations, and a non-destructive seed of the existing portfolio content. MFA and the fixed 24-hour owner session follow in Phase 3; dashboard/media management follow in Phase 4.

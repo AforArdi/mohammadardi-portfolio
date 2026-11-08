@@ -1,7 +1,6 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef, useLayoutEffect } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Image from 'next/image';
+import SectionHeading from './SectionHeading';
+import Reveal from './Reveal';
 import { ExternalLink, Github } from 'lucide-react';
 import heroRideImage from '@/assets/heroride.png';
 
@@ -34,64 +33,29 @@ const projects = [
 ];
 
 const ProjectsSection = () => {
-  const ref = useRef(null);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
-
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
-      mm.add('(prefers-reduced-motion: no-preference)', () => {
-        const cards = gridRef.current?.querySelectorAll('.project-card');
-        if (!cards || cards.length === 0) return;
-        gsap.set(cards, { opacity: 0, scale: 0.95 });
-        ScrollTrigger.batch(cards as NodeListOf<Element>, {
-          start: 'top 85%',
-          onEnter: (batch) =>
-            gsap.to(batch, {
-              opacity: 1,
-              scale: 1,
-              duration: 0.6,
-              ease: 'power2.out',
-              stagger: 0.1,
-              overwrite: true,
-            }),
-        });
-      });
-    }, ref);
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <section id="projects" className="py-24 relative" ref={ref}>
+    <section id="projects" className="py-20 md:py-24 relative">
       <div className="absolute top-20 right-10 w-32 h-32 border border-primary/10 rounded-full" />
       <div className="absolute bottom-20 left-10 w-24 h-24 border border-primary/20 rotate-45" />
 
       <div className="container mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="flex items-center gap-4 mb-16"
-        >
-          <h2 className="section-title">projects</h2>
-          <div className="section-line" />
-        </motion.div>
+        <SectionHeading>projects</SectionHeading>
 
-        <div ref={gridRef} className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {projects.map((project, index) => (
-            <div
+        <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          {projects.map((project) => (
+            <Reveal
               key={project.name}
               className="project-card group border border-border/60 bg-card/40 backdrop-blur-sm rounded-lg overflow-hidden 
                          transition-all duration-300 hover:border-primary/50 
                          hover:shadow-[0_0_30px_hsl(var(--primary)/0.15)] flex flex-col"
             >
-              <div className="overflow-hidden bg-background/50">
-                <img
+              <div className="relative aspect-[16/8] overflow-hidden bg-background/50">
+                <Image
                   src={project.image}
                   alt={project.name}
-                  loading="lazy"
-                  className="w-full transition-all duration-300 group-hover:scale-105"
+                  fill
+                  sizes="(min-width: 1440px) 496px, (min-width: 1024px) 44vw, (min-width: 768px) 720px, calc(100vw - 48px)"
+                  className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
 
@@ -150,7 +114,7 @@ const ProjectsSection = () => {
                   </a>
                 </div>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

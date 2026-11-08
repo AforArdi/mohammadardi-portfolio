@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 ui-screenshots/
 .agents/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+.lovable
