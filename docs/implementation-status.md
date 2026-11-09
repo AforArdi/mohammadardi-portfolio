@@ -2,11 +2,13 @@
 
 * **Author:** Antigravity (Senior Next.js Engineer)
 * **Last Updated:** 2026-11-09
-* **Current Checkpoint:** Phase 1 implemented and verified locally; database and dashboard pending
-* **Active Branch:** `migration/nextjs-app-router`
+* **Current Checkpoint:** Owner CMS connected; real owner MFA login and saved public updates verified; release checks outstanding
+* **Active Branch:** `main` (owner CMS checkpoint; earlier migration work used `migration/nextjs-app-router`)
 * **Repository Path:** `C:\projects\mohammadardi-portfolio`
 
 ---
+
+For the current backend implementation and verification, see [`BACKEND_STATUS.md`](../BACKEND_STATUS.md) and [`BACKEND_SETUP.md`](../BACKEND_SETUP.md). Sections below retain the historical Phase 0/Phase 1 evidence.
 
 ## 1. Environment & Baseline Snapshot
 

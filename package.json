@@ -11,7 +11,13 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "preview": "next start"
+    "preview": "next start",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:bootstrap": "tsx scripts/bootstrap-db.ts",
+    "db:seed": "tsx scripts/seed-portfolio.ts",
+    "storage:setup": "tsx scripts/setup-storage.ts",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -49,7 +55,13 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^12.23.26",
+    "motion": "12.43.0",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.119.0",
+    "drizzle-orm": "0.38.4",
+    "postgres": "3.4.7",
+    "sharp": "0.35.5",
+    "server-only": "0.0.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next": "15.5.29",
@@ -69,6 +81,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@next/env": "15.5.29",
+    "@electric-sql/pglite": "0.5.15",
+    "drizzle-kit": "0.30.4",
+    "tsx": "4.23.15",
     "@next/eslint-plugin-next": "15.5.29",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",

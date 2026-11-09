@@ -14,7 +14,7 @@ const EMAILJS_TEMPLATE_ID = "template_k7rczgl";
 const EMAILJS_PUBLIC_KEY = "2jjc3ar5kXeOknqKg";
 const RECAPTCHA_SITE_KEY = "6LctczssAAAAANVmHC_u6PK7K-pJR9RwAxx4DC2e";
 
-export default function ContactSection() {
+export default function ContactSection({ contactEmail, linkedinUrl }: { contactEmail: string; linkedinUrl?: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const captchaRef = useRef<ReCAPTCHAInstance>(null);
   const [captcha, setCaptcha] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export default function ContactSection() {
       formRef.current.reset();
       setStatus({ error: false, text: "Message sent! Thank you for reaching out. I’ll get back to you soon." });
     } catch {
-      setStatus({ error: true, text: "Your message could not be sent. Please try again or email miftahulislam9037@gmail.com." });
+      setStatus({ error: true, text: `Your message could not be sent. Please try again or email ${contactEmail}.` });
     } finally {
       setSending(false);
       setCaptcha(null);
@@ -50,8 +50,8 @@ export default function ContactSection() {
             <div className="skill-card inline-block">
               <h3 className="font-mono font-bold mb-4">Message me here</h3>
               <div className="space-y-3">
-                <a href="mailto:miftahulislam9037@gmail.com" className="flex items-center gap-3 text-muted-foreground hover:text-primary"><Mail size={18} aria-hidden="true" />Get in touch</a>
-                <a href="https://www.linkedin.com/in/mohammad-ardi/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-primary"><Linkedin size={18} aria-hidden="true" />LinkedIn Profile</a>
+                <a href={`mailto:${contactEmail}`} className="flex items-center gap-3 text-muted-foreground hover:text-primary"><Mail size={18} aria-hidden="true" />Get in touch</a>
+                {linkedinUrl && <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-primary"><Linkedin size={18} aria-hidden="true" />LinkedIn Profile</a>}
               </div>
             </div>
           </div>

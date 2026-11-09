@@ -1,26 +1,13 @@
+import type { PublicPortfolio } from "@/lib/content/public";
 import Image from 'next/image';
 import SectionHeading from './SectionHeading';
 import Reveal from './Reveal';
 import { ExternalLink } from 'lucide-react';
 
-const achievements = [
-  {
-    title: "CS50's Introduction to Computer Science",
-    subtitle: "Certificate of Completion",
-    description: "Harvard's CS50 is a beginner-friendly introduction to computer science that prioritizes problem-solving and computational thinking over just learning syntax. Designed for students with no prior experience, the course starts with C to teach low-level fundamentals (like memory management) before transitioning to Python, SQL, and web technologies (HTML, CSS, JavaScript). The curriculum focuses on teaching you how to learn new languages effectively and culminates in a final project.",
-    imageUrl: "https://certificates.cs50.io/009a021f-dd2c-40fc-8f4c-77b9e511e992.png?size=A4",
-    verifyUrl: "https://cs50.harvard.edu/certificates/009a021f-dd2c-40fc-8f4c-77b9e511e992"
-  },
-  {
-    title: "Workshop on Computer Programming & Robotics",
-    subtitle: "Certificate of Participation",
-    description: "Experts from a well-known engineering university collaborated with American Corner Khulna to provide a hands-on experience in robotics and computer programming. The workshop focused on understanding how robotics systems work at a low level and how the C programming language can directly manipulate hardware components.",
-    imageUrl: "https://raw.githubusercontent.com/AforArdi/mohammadardi/refs/heads/main/images/ROBOTICS.png",
-    verifyUrl: "https://raw.githubusercontent.com/AforArdi/mohammadardi/refs/heads/main/images/ROBOTICS.png"
-  }
-];
 
-const AchievementsSection = () => {
+
+const AchievementsSection = ({ achievements }: { achievements: PublicPortfolio["achievements"] }) => {
+  if (!achievements.length) return null;
   return (
     <section id="achievements" className="py-20 md:py-24 relative">
       {/* Decorative elements */}
@@ -46,6 +33,7 @@ const AchievementsSection = () => {
                   src={achievement.imageUrl}
                   alt={achievement.title}
                   fill
+                  unoptimized
                   sizes="(min-width: 1440px) 496px, (min-width: 1024px) 44vw, (min-width: 768px) 720px, calc(100vw - 48px)"
                   className="object-contain"
                 />

@@ -1,0 +1,43 @@
+import assert from "node:assert/strict";
+import nextEnv from "@next/env";
+nextEnv.loadEnvConfig(process.cwd());
+
+const origin = process.env.PORTFOLIO_TEST_ORIGIN || "http://localhost:3100";
+async function expect(path: string, status: number, options: RequestInit = {}) {
+  const response = await fetch(`${origin}${path}`, { ...options, redirect: "manual" });
+  assert.equal(response.status, status, `${options.method || "GET"} ${path}`);
+  console.log(`${options.method || "GET"} ${path}: ${status}`);
+  return response;
+}
+const login = await expect("/admin/login", 200);
+assert.match(login.headers.get("cache-control") || "", /no-store/);
+const blocked = await expect("/admin", 307);
+assert.equal(blocked.headers.get("location"), "/admin/login");
+for (const path of ["/api/admin/content/profile", "/api/admin/content/projects", "/api/admin/media/00000000-0000-4000-8000-000000000400"]) await expect(path, 401);
+await expect("/api/admin/content/socials", 401, { method: "POST", headers: { Origin: origin, "Content-Type": "application/json" }, body: "{}" });
+await expect("/api/admin/content/socials", 403, { method: "POST", headers: { Origin: "https://untrusted.invalid", "Content-Type": "application/json" }, body: "{}" });
+await expect("/api/admin/upload", 401, { method: "POST", headers: { Origin: origin }, body: "unauthenticated" });
+const image = await expect("/api/media/project/00000000-0000-4000-8000-000000000101", 200);
+assert.equal(image.headers.get("content-type"), "image/webp");
+assert.match(image.headers.get("cache-control") || "", /no-store/);
+const bytes = Buffer.from(await image.arrayBuffer());
+assert.equal(bytes.subarray(0, 4).toString("ascii"), "RIFF");
+assert.equal(bytes.subarray(8, 12).toString("ascii"), "WEBP");
+await expect("/api/media/project/ffffffff-ffff-4fff-8fff-ffffffffffff", 404);
+const raw = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-media/00000000-0000-4000-8000-000000000401.webp`);
+assert.notEqual(raw.status, 200, "Private storage must reject the permanently public object URL");
+console.log("Private storage URL is not anonymously accessible.");
+const resume = await fetch(`${origin}/api/resume`, { method: "HEAD" });
+assert.ok([200, 404].includes(resume.status));
+if (resume.status === 200) {
+  assert.match(resume.headers.get("content-type") || "", /application\/pdf/);
+  await expect("/api/resume", 206, { method: "HEAD", headers: { Range: "bytes=-1" } });
+  await expect("/api/resume", 416, { method: "HEAD", headers: { Range: "bytes=999999999-" } });
+} else console.log("No resume uploaded yet; real-PDF delivery check is pending.");
+await expect("/api/cron/cleanup", 401);
+assert.ok(process.env.CRON_SECRET, "Set CRON_SECRET for authenticated cleanup verification");
+const cleanup = await expect("/api/cron/cleanup", 200, { headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` } });
+const result = await cleanup.json();
+assert.equal(typeof result.claimed, "number");
+assert.equal(typeof result.completed, "number");
+console.log("Server API smoke checks passed. No owner authentication cookies or credential values were read or printed.");

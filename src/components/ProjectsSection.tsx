@@ -1,38 +1,14 @@
+import type { PublicPortfolio } from "@/lib/content/public";
 import Image from 'next/image';
 import SectionHeading from './SectionHeading';
 import Reveal from './Reveal';
 import { ExternalLink, Github } from 'lucide-react';
-import heroRideImage from '@/assets/heroride.png';
 
-const projects = [
-  {
-    name: 'Qurbani Hat',
-    about:
-      'An online platform for booking qurbani animals with an intuitive interface for browsing, comparing, and booking animals for Eid celebrations.',
-    image: 'https://i.postimg.cc/bJVXx1c3/qurbani-hat.png',
-    github: 'https://github.com/AforArdi/qurbani-hat-a8',
-    live: 'https://qurbani-hat-a8.vercel.app',
-  },
-  {
-    name: 'Dragon News',
-    about:
-      'A modern, responsive news portal application built with Next.js and React 19. Browse news articles by category, authenticate users securely, and enjoy a seamless reading experience.',
-    image: 'https://i.postimg.cc/DZpVr1kg/dragon-news.png',
-    github: 'https://github.com/AforArdi/dragon-news-nextjs',
-    live: 'https://dragon-news-nextjs-navy.vercel.app/',
-  },
-  {
-    name: 'HeroRide',
-    about:
-      "Hey there! Welcome to HeroRide. I built this full-stack web application as a major milestone in my 180-day MERN stack learning journey. I'm super excited to share it because building this platform really pushed my skills to the next level in connecting a Next.js frontend with a secure Express backend!",
-    image: heroRideImage,
-    github: 'https://github.com/AforArdi/heroride',
-    githubServer: 'https://github.com/AforArdi/heroride-server',
-    live: 'https://heroride.vercel.app',
-  },
-];
 
-const ProjectsSection = () => {
+
+
+const ProjectsSection = ({ projects }: { projects: PublicPortfolio["projects"] }) => {
+  if (!projects.length) return null;
   return (
     <section id="projects" className="py-20 md:py-24 relative">
       <div className="absolute top-20 right-10 w-32 h-32 border border-primary/10 rounded-full" />
@@ -54,6 +30,7 @@ const ProjectsSection = () => {
                   src={project.image}
                   alt={project.name}
                   fill
+                  unoptimized
                   sizes="(min-width: 1440px) 496px, (min-width: 1024px) 44vw, (min-width: 768px) 720px, calc(100vw - 48px)"
                   className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
                 />
@@ -68,7 +45,7 @@ const ProjectsSection = () => {
                 </p>
 
                 <div className="flex flex-wrap gap-3 mt-6">
-                  <a
+                  {project.github && <a
                     href={project.github}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -80,9 +57,9 @@ const ProjectsSection = () => {
                                hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)]"
                   >
                     <Github size={16} />
-                    {('githubServer' in project) ? 'Frontend' : 'GitHub'}
-                  </a>
-                  {('githubServer' in project) && (
+                    {project.githubServer ? 'Frontend' : 'GitHub'}
+                  </a>}
+                  {project.githubServer && (
                     <a
                       href={(project as { githubServer: string }).githubServer}
                       target="_blank"

@@ -30,3 +30,4 @@ out/
 .env*
 !.env.example
 .lovable
+docs/

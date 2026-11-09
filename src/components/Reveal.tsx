@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
 
 /** Server-rendered content remains visible, including without JavaScript. */
 export default function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
