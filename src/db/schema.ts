@@ -66,10 +66,34 @@ export const socialLinks = portfolio.table("social_links", {
   id: uuid("id").primaryKey().defaultRandom(), platform: text("platform").notNull(), label: text("label").notNull(), url: text("url").notNull(), iconKey: text("icon_key").notNull(), ...editorial(),
 }, t => ({ published: index("socials_published_order").on(t.displayOrder, t.id).where(sql`${t.isPublished} = true AND ${t.deletedAt} IS NULL`) }));
 
+export const youtubeVideos = portfolio.table("youtube_videos", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  videoId: text("video_id").notNull(),
+  url: text("url").notNull(),
+  fetchedTitle: text("fetched_title"),
+  titleOverride: text("title_override"),
+  description: text("description").notNull().default(""),
+  thumbnailUrl: text("thumbnail_url"),
+  channelTitle: text("channel_title"),
+  metadataFetchedAt: date("metadata_fetched_at"),
+  ...editorial(),
+}, t => ({
+  activeVideoId: uniqueIndex("youtube_videos_active_video_id").on(t.videoId).where(sql`${t.deletedAt} IS NULL`),
+  published: index("youtube_videos_published_order").on(t.displayOrder, t.id).where(sql`${t.isPublished} = true AND ${t.deletedAt} IS NULL`),
+}));
+
 export const freshLoginNonces = portfolio.table("fresh_login_nonces", {
   nonce: text("nonce").primaryKey(), userId: uuid("user_id").notNull(), sessionId: uuid("session_id").notNull(),
+  securityGeneration: integer("security_generation").notNull().default(0),
   failedAttempts: integer("failed_attempts").notNull().default(0), expiresAt: date("expires_at").notNull(), usedAt: date("used_at"),
 }, t => ({ expiry: index("nonces_expiry").on(t.expiresAt), attempts: check("nonce_attempt_limit", sql`${t.failedAttempts} BETWEEN 0 AND 3`) }));
+
+export const ownerSecurity = portfolio.table("owner_security", {
+  userId: uuid("user_id").primaryKey(),
+  generation: integer("generation").notNull().default(0),
+  passwordChangeId: uuid("password_change_id"),
+  passwordChangeStartedAt: date("password_change_started_at"),
+});
 
 export const adminSessions = portfolio.table("admin_sessions", {
   sessionId: uuid("session_id").primaryKey(), userId: uuid("user_id").notNull(),

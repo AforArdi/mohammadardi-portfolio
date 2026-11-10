@@ -6,6 +6,7 @@ import { apiError, assertSameOrigin, boundedBody, HttpError } from "@/lib/api";
 import { collectionTables, invalidatePortfolio, saveContent, type Collection } from "@/lib/content/mutations";
 import { deleteInput } from "@/lib/content/validation";
 import { drainCleanup } from "@/lib/storage/cleanup";
+import { reserveRateLimit } from "@/lib/auth/queries";
 
 type Context = { params: Promise<{ collection: string }> };
 export async function GET(_request: Request, { params }: Context) {
@@ -20,7 +21,11 @@ export async function GET(_request: Request, { params }: Context) {
 }
 export async function POST(request: Request, { params }: Context) {
   try {
-    assertSameOrigin(request); await requireOwnerAdmin();
+    assertSameOrigin(request); const owner = await requireOwnerAdmin();
+    if ((await params).collection === "videos") {
+      const allowed = await getDb().execute(reserveRateLimit(`yt-save:${owner.userId}`, 60, 3600));
+      if (!allowed.length) throw new HttpError(429, "Video save limit reached. Try again later.");
+    }
     const body = JSON.parse((await boundedBody(request, 40_000)).toString("utf8"));
     const result = await saveContent((await params).collection, body);
     invalidatePortfolio();

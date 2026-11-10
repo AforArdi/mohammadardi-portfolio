@@ -3,7 +3,7 @@ import { getDb } from "@/db";
 import { mediaAssets, storageCleanupQueue } from "@/db/schema";
 import { requireOwnerAdmin } from "@/lib/auth/guard";
 import { storageClient } from "@/lib/storage/client";
-import { MAX_FILE_BYTES, prepareImage } from "@/lib/storage/images";
+import { IMAGE_PURPOSES, ImagePurpose, MAX_FILE_BYTES, prepareImage } from "@/lib/storage/images";
 import { apiError, assertSameOrigin, boundedBody, HttpError } from "@/lib/api";
 import { reserveRateLimit } from "@/lib/auth/queries";
 
@@ -25,8 +25,18 @@ export async function POST(request: Request) {
     if (pdf) {
       if (data.subarray(0, 5).toString("ascii") !== "%PDF-" || !/\.pdf$/i.test(file.name)) throw new HttpError(400, "Choose a valid PDF resume.");
     } else {
-      try { const image = await prepareImage(data); data = Buffer.from(image.data); width = image.width; height = image.height; }
-      catch { throw new HttpError(400, "That image could not be processed. Use a PNG, JPEG, or WebP under 24 megapixels."); }
+      const purposeRaw = form.get("purpose");
+      if (typeof purposeRaw !== "string" || !IMAGE_PURPOSES.includes(purposeRaw as ImagePurpose)) {
+        throw new HttpError(400, "Choose a valid image purpose: icon, portrait, project, or certificate.");
+      }
+      try {
+        const image = await prepareImage(data, purposeRaw as ImagePurpose);
+        data = Buffer.from(image.data);
+        width = image.width;
+        height = image.height;
+      } catch (error) {
+        throw new HttpError(400, error instanceof Error ? error.message : "That image could not be processed. Use a PNG, JPEG, or WebP under 24 megapixels.");
+      }
     }
     const id = randomUUID();
     const bucketName = pdf ? "private-documents" : "private-staging";

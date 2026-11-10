@@ -27,5 +27,12 @@ export const skillInput = z.object({
 export const projectInput = z.object({ title: name, description, imageMediaId: uuid, liveUrl: httpsUrl, githubUrl: optionalUrl, githubServerUrl: optionalUrl, ...editorial }).strict();
 export const achievementInput = z.object({ title: name, certificateType: name, description, imageMediaId: uuid, verifyUrl: httpsUrl, ...editorial }).strict();
 export const socialInput = z.object({ platform: name, label: name, url: httpsUrl, iconKey: z.string().min(1).max(100), ...editorial }).strict();
+export const videoInput = z.object({
+  url: z.string().trim().min(1).max(2000),
+  titleOverride: z.string().trim().max(300).nullable().optional().transform(v => v ? v.trim() : null),
+  description: z.string().trim().max(10000).default(""),
+  refreshMetadata: z.boolean().optional(),
+  ...editorial,
+}).strict();
 export const mutationInput = z.object({ id: uuid.optional(), expectedVersion: z.number().int().positive().optional(), data: z.unknown() }).strict().refine(value => !value.id || value.expectedVersion, "An existing item requires its version.");
 export const deleteInput = z.object({ id: uuid, expectedVersion: z.number().int().positive() }).strict();

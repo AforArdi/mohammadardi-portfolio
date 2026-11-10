@@ -31,8 +31,8 @@ export default function Navbar({ sections = defaultSections, displayName = "Ardi
     <header className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${scrolled ? "glass py-4" : "bg-background/90 py-6"}`}>
       <nav aria-label="Main navigation" className="container mx-auto px-6 flex items-center justify-between gap-4">
         <a href="#home" aria-label={`${displayName}, home`} className="flex min-w-0 max-w-48 items-center gap-2 font-mono text-xl font-bold"><span className="text-primary">&lt;</span><span className="truncate">{displayName}</span><span className="text-primary">/&gt;</span></a>
-        <ul className="hidden md:flex items-center gap-4 lg:gap-7">
-          {sections.map(id => <li key={id}><a href={`#${id}`} aria-current={active === id ? "location" : undefined} className={`nav-link font-mono text-sm ${active === id ? "active" : ""}`}>{id}</a></li>)}
+        <ul className="hidden md:flex items-center gap-3 lg:gap-6">
+          {sections.map(id => <li key={id}><a href={`#${id}`} aria-current={active === id ? "location" : undefined} className={`nav-link font-mono text-xs lg:text-sm whitespace-nowrap ${active === id ? "active" : ""}`}>{id}</a></li>)}
         </ul>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild><button type="button" className="md:hidden p-2" aria-label="Open navigation"><Menu size={24} /></button></SheetTrigger>

@@ -5,6 +5,8 @@ export function establishAdminSession(nonce: string, userId: string, sessionId: 
     UPDATE portfolio.fresh_login_nonces SET used_at = now()
     WHERE nonce = ${nonce} AND user_id = ${userId}::uuid AND session_id = ${sessionId}::uuid
       AND used_at IS NULL AND expires_at > now() AND failed_attempts BETWEEN 1 AND 3
+      AND security_generation = COALESCE((SELECT generation FROM portfolio.owner_security WHERE user_id = ${userId}::uuid), 0)
+      AND NOT EXISTS (SELECT 1 FROM portfolio.owner_security WHERE user_id = ${userId}::uuid AND password_change_id IS NOT NULL)
     RETURNING user_id, session_id
   ) INSERT INTO portfolio.admin_sessions (session_id, user_id, aal2_verified_at, deadline_at, is_revoked)
     SELECT session_id, user_id, now(), now() + interval '24 hours', false FROM consumed

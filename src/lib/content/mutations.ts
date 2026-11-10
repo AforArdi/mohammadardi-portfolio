@@ -2,15 +2,16 @@ import "server-only";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { getDb } from "@/db";
-import { achievements, mediaAssets, profile, projects, skills, socialLinks, storageCleanupQueue } from "@/db/schema";
+import { achievements, mediaAssets, profile, projects, skills, socialLinks, storageCleanupQueue, youtubeVideos } from "@/db/schema";
 import { HttpError } from "@/lib/api";
 import { storageClient } from "@/lib/storage/client";
 import { iconRegistry } from "./icons";
-import { achievementInput, mutationInput, profileInput, projectInput, skillInput, socialInput } from "./validation";
+import { achievementInput, mutationInput, profileInput, projectInput, skillInput, socialInput, videoInput } from "./validation";
+import { fetchYouTubeMetadata, parseYouTubeUrl } from "@/lib/youtube/service";
 
-export const collections = ["skills", "projects", "achievements", "socials"] as const;
+export const collections = ["skills", "projects", "achievements", "socials", "videos"] as const;
 export type Collection = typeof collections[number];
-export const collectionTables = { skills, projects, achievements, socials: socialLinks };
+export const collectionTables = { skills, projects, achievements, socials: socialLinks, videos: youtubeVideos };
 
 function changed<T>(rows: T[]) {
   if (!rows.length) throw new HttpError(409, "This item changed in another tab. Refresh before saving again.");
@@ -68,6 +69,136 @@ export async function saveContent(collection: string, input: unknown) {
     const value = socialInput.parse(data);
     checkIcon(value.iconKey);
     return id ? changed(await db.update(socialLinks).set({ ...value, version: sql`${socialLinks.version} + 1`, updatedAt: new Date() }).where(and(eq(socialLinks.id, id), eq(socialLinks.version, expectedVersion!), isNull(socialLinks.deletedAt))).returning()) : changed(await db.insert(socialLinks).values(value).returning());
+  }
+  if (collection === "videos") {
+    const value = videoInput.parse(data);
+    let parsed;
+    try { parsed = parseYouTubeUrl(value.url); }
+    catch (error) { throw new HttpError(400, error instanceof Error ? error.message : "Provide a valid YouTube URL."); }
+    const { videoId, canonicalUrl } = parsed;
+
+    // Deliberately validate duplicate active video IDs and return a useful conflict error
+    const duplicates = await db
+      .select({ id: youtubeVideos.id })
+      .from(youtubeVideos)
+      .where(and(eq(youtubeVideos.videoId, videoId), isNull(youtubeVideos.deletedAt)));
+    if (duplicates.length && (!id || duplicates[0].id !== id)) {
+      throw new HttpError(409, "A card for this YouTube video already exists in your collection.");
+    }
+
+    if (!id) {
+      // New import: fetch YouTube metadata
+      const meta = await fetchYouTubeMetadata(videoId);
+      let fetchedTitle: string | null = null;
+      let channelTitle: string | null = null;
+      let thumbnailUrl: string | null = null;
+      let metadataFetchedAt: Date | null = null;
+
+      if (meta.ok && meta.title) {
+        fetchedTitle = meta.title;
+        channelTitle = meta.channelTitle;
+        thumbnailUrl = meta.thumbnailUrl;
+        metadataFetchedAt = new Date();
+      } else {
+        if (value.isPublished) {
+          throw new HttpError(400, meta.error || "Cannot publish video without verified YouTube metadata. Save as draft instead.");
+        }
+      }
+
+      const record = {
+        videoId,
+        url: canonicalUrl,
+        fetchedTitle,
+        titleOverride: value.titleOverride,
+        description: value.description,
+        thumbnailUrl,
+        channelTitle,
+        metadataFetchedAt,
+        displayOrder: value.displayOrder,
+        isPublished: value.isPublished,
+      };
+
+      try {
+        return changed(await db.insert(youtubeVideos).values(record).returning());
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && "code" in err && err.code === "23505") {
+          throw new HttpError(409, "A card for this YouTube video already exists in your collection.");
+        }
+        throw err;
+      }
+    } else {
+      // Update existing video
+      const [existing] = await db
+        .select()
+        .from(youtubeVideos)
+        .where(and(eq(youtubeVideos.id, id), isNull(youtubeVideos.deletedAt)));
+      if (!existing) throw new HttpError(404, "Video not found.");
+
+      let fetchedTitle = existing.fetchedTitle;
+      let channelTitle = existing.channelTitle;
+      let thumbnailUrl = existing.thumbnailUrl;
+      let metadataFetchedAt = existing.metadataFetchedAt;
+
+      const urlChanged = existing.videoId !== videoId;
+      const shouldFetch = Boolean(value.refreshMetadata) || urlChanged;
+
+      if (shouldFetch) {
+        const meta = await fetchYouTubeMetadata(videoId);
+        if (meta.ok && meta.title) {
+          fetchedTitle = meta.title;
+          channelTitle = meta.channelTitle;
+          thumbnailUrl = meta.thumbnailUrl;
+          metadataFetchedAt = new Date();
+        } else if (urlChanged) {
+          if (value.isPublished) {
+            throw new HttpError(400, meta.error || "Cannot publish video without verified YouTube metadata. Save as draft instead.");
+          }
+          fetchedTitle = null;
+          channelTitle = null;
+          thumbnailUrl = null;
+          metadataFetchedAt = null;
+        }
+        else {
+          throw new HttpError(502, "YouTube refresh failed. Your saved metadata and edits have not changed. Try again later.");
+        }
+      }
+
+      // If published, ensure there is a non-empty display title
+      const displayTitle = (value.titleOverride && value.titleOverride.trim()) || fetchedTitle;
+      if (value.isPublished && !displayTitle) {
+        throw new HttpError(400, "Cannot publish a video without a valid title.");
+      }
+
+      const updateData = {
+        videoId,
+        url: canonicalUrl,
+        fetchedTitle,
+        titleOverride: value.titleOverride,
+        description: value.description,
+        thumbnailUrl,
+        channelTitle,
+        metadataFetchedAt,
+        displayOrder: value.displayOrder,
+        isPublished: value.isPublished,
+        version: sql`${youtubeVideos.version} + 1`,
+        updatedAt: new Date(),
+      };
+
+      try {
+        return changed(
+          await db
+            .update(youtubeVideos)
+            .set(updateData)
+            .where(and(eq(youtubeVideos.id, id), eq(youtubeVideos.version, expectedVersion!), isNull(youtubeVideos.deletedAt)))
+            .returning()
+        );
+      } catch (err: unknown) {
+        if (err && typeof err === "object" && "code" in err && err.code === "23505") {
+          throw new HttpError(409, "A card for this YouTube video already exists in your collection.");
+        }
+        throw err;
+      }
+    }
   }
   throw new HttpError(404, "Section not found.");
 }

@@ -15,6 +15,20 @@
       "when": 1794230999095,
       "tag": "0001_private_schema_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794302162101,
+      "tag": "0002_youtube_videos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794305547449,
+      "tag": "0003_tough_weapon_omega",
+      "breakpoints": true
     }
   ]
 }

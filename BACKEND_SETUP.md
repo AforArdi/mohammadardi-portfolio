@@ -36,7 +36,7 @@ Bootstrap generates restricted role passwords and application secrets into `.env
 
 ## Database boundary and migrations
 
-All ten application tables and the migration journal live in the private `portfolio` schema. `anon`, `authenticated`, and `PUBLIC` have no schema/table access. Tables have RLS enabled with explicit policies for the restricted server runtime role. That runtime role cannot create schemas, tables, roles, databases, bypass RLS, or access the migration journal.
+All application tables and the migration journal live in the private `portfolio` schema. `anon`, `authenticated`, and `PUBLIC` have no schema/table access. Tables have RLS enabled with explicit policies for the restricted server runtime role. That runtime role cannot create schemas, tables, roles, databases, bypass RLS, or access the migration journal.
 
 The migration role owns only this schema. Drizzle's stock migrator unconditionally issues `CREATE SCHEMA`, which requires a database-wide privilege on this PostgreSQL setup even when the schema exists. To keep that privilege withheld, `scripts/migrate.ts` uses Drizzle's `readMigrationFiles`, generated SQL, hashes, and journal format inside one advisory-locked transaction. The administrator creates the journal during bootstrap. Applied migration hashes are checked; never edit an already-applied migration.
 
@@ -99,6 +99,23 @@ With a local server running on port 3100, API-only integration checks are availa
 
 Run the build and separate type check sequentially because Next.js replaces generated route types while building. Tests use an isolated PGlite PostgreSQL instance for migration permissions, RLS, single-use MFA/session SQL, fixed deadlines, quota integer sizes, rate limits, and stale-version updates, plus validation and image-processing tests. A real owner login and authenticator enrollment must still be exercised in the browser; fixture SQL does not replace that end-to-end check.
 
-The public contact form still uses the existing EmailJS/reCAPTCHA integration. Replacing it with the planned server-side contact action/Turnstile remains separate release work and requires provider configuration. Weekly favorite videos remain deferred. Production hosting, DNS cutover, a full backup/restore drill, and deployment are not performed by these setup scripts.
+The public contact form still uses the existing EmailJS/reCAPTCHA integration. Replacing it with the planned server-side contact action/Turnstile remains separate release work and requires provider configuration. My YT Week now supports manually published videos through the dashboard, with keyless YouTube metadata import and an optional title override. Production hosting, DNS cutover, a full backup/restore drill, and deployment are not performed by these setup scripts.
 
 Supabase's current security advisor reports leaked-password detection disabled. Review [password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) before production; no billing or paid-feature settings are changed automatically.
+
+## Dashboard password change
+
+Open `/admin/security` (Security in the studio header). Supply the current password, a different new password of at least 12 characters, confirmation, and a fresh six-digit code from a verified authenticator. Password verification uses an isolated memory-only Supabase session, not the browser's SSR session. On success, all portfolio authorizations/pending proofs are revoked and Supabase global sign-out is requested. Sign in again with the new password and TOTP. There is no forgot-password/reset route or email-only bypass.
+
+A private `owner_security` row coordinates changes. Before the Auth write, a transaction durably blocks new authorizations, increments the proof generation, revokes admin sessions, and deletes pending proofs. Login proof issuance and finalization lock the same row; pre-change proofs cannot authorize afterward. The 24-hour session deadline remains fixed.
+
+### Interrupted password-change recovery (offline only)
+
+An uncertain Auth response, failed global sign-out, or server crash after beginning a change deliberately leaves dashboard access blocked. Never automatically expire this block: the provider may have accepted the write. This recovery clears only the interrupted-operation gate; it does not reset a password, delete MFA, or bypass a fresh password/TOTP login.
+
+1. Stop every running instance of the application. Wait at least 15 minutes so outstanding requests can finish. Inspect provider logs privately and determine whether the password update completed; never paste credentials into chat or command arguments.
+2. Run `pnpm exec tsx scripts/admin-recover-security.ts` locally with the existing ignored operator environment. It reports whether there is a pending operation and its non-secret UUID.
+3. After confirming the app is stopped and the operation is no longer in flight, run `pnpm exec tsx scripts/admin-recover-security.ts --execute --confirm-app-stopped --operation=UUID`, replacing UUID with that exact operation ID. The script requires the gate to be at least 15 minutes old, increments the generation again, revokes application sessions/proofs, and clears the gate transactionally.
+4. Restart the app and sign in privately with the password that the provider currently accepts and your authenticator. Provider refresh-token revocation is not claimed by this offline database-only recovery; application access still requires a new password/TOTP proof.
+
+The existing lost-authenticator recovery script remains a separate procedure. No live owner password or authenticator is changed by automated tests.

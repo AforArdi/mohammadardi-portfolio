@@ -5,6 +5,23 @@ import { getPublicPortfolio } from "@/lib/content/public";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const data = await getPublicPortfolio();
-  const sections = ["home", "about", ...(data.skills.length ? ["skills"] : []), ...(data.projects.length ? ["projects"] : []), ...(data.achievements.length ? ["achievements"] : []), "contact"];
-  return <><Navbar sections={sections} displayName={data.profile.displayName} /><FloatingSidebar /><div className="public-content">{children}<Footer displayName={data.profile.displayName} /></div></>;
+  const sections = [
+    "home",
+    "about",
+    ...(data.skills.length ? ["skills"] : []),
+    ...(data.projects.length ? ["projects"] : []),
+    ...(data.achievements.length ? ["achievements"] : []),
+    ...(data.videos?.length ? ["my-yt-week"] : []),
+    "contact",
+  ];
+  return (
+    <>
+      <Navbar sections={sections} displayName={data.profile.displayName} />
+      <FloatingSidebar />
+      <div className="public-content">
+        {children}
+        <Footer displayName={data.profile.displayName} />
+      </div>
+    </>
+  );
 }

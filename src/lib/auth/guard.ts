@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { adminSessions } from "@/db/schema";
 import { supabaseServer } from "./supabase-server";
@@ -20,6 +20,7 @@ export async function requireOwnerAdmin() {
   const [record] = await getDb().select({ deadlineAt: adminSessions.deadlineAt }).from(adminSessions).where(and(
     eq(adminSessions.sessionId, identity.sessionId), eq(adminSessions.userId, identity.userId),
     eq(adminSessions.isRevoked, false), gt(adminSessions.deadlineAt, new Date()),
+    sql`NOT EXISTS (SELECT 1 FROM portfolio.owner_security WHERE user_id = ${identity.userId}::uuid AND password_change_id IS NOT NULL)`,
   ));
   if (!record) throw new AuthorizationError();
   return { ...identity, deadlineAt: record.deadlineAt };

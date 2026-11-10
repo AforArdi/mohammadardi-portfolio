@@ -6,8 +6,9 @@ import { storageClient } from "@/lib/storage/client";
 import { parseByteRange } from "@/lib/storage/range";
 
 export const dynamic = "force-dynamic";
-export async function HEAD(request: Request) { return deliver(request, true); }
-export async function GET(request: Request) { return deliver(request, false); }
+export async function HEAD(request: Request) { return deliver(request, true).catch(unavailable); }
+export async function GET(request: Request) { return deliver(request, false).catch(unavailable); }
+function unavailable() { return new Response(null, { status: 503, headers: { "Cache-Control": "no-store" } }); }
 async function deliver(request: Request, head: boolean) {
   const [asset] = await getDb().select({ bucket: mediaAssets.bucketName, path: mediaAssets.storagePath, size: mediaAssets.fileSizeBytes }).from(profile).innerJoin(mediaAssets, eq(profile.resumeMediaId, mediaAssets.id)).where(eq(profile.id, 1));
   if (!asset) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
@@ -23,14 +24,14 @@ async function deliver(request: Request, head: boolean) {
   const globalKey = `resume-month:${month}`;
   const allowed = await getDb().transaction(async tx => {
     await tx.execute(sql`INSERT INTO portfolio.rate_limit_buckets (key, count, bytes_served, expires_at) VALUES
-      (${globalKey},0,0,${nextMonth}), (${clientKey},0,0,now() + interval '10 minutes') ON CONFLICT DO NOTHING`);
+      (${globalKey},0,0,${nextMonth.toISOString()}::timestamptz), (${clientKey},0,0,now() + interval '10 minutes') ON CONFLICT DO NOTHING`);
     const rows = await tx.execute(sql`SELECT key, count, bytes_served, expires_at FROM portfolio.rate_limit_buckets WHERE key IN (${globalKey},${clientKey}) ORDER BY key FOR UPDATE`);
     const ip = rows.find(row => row.key === clientKey)!;
     const global = rows.find(row => row.key === globalKey)!;
     const expired = new Date(ip.expires_at as string).getTime() <= Date.now();
     if ((!expired && Number(ip.count) >= 60) || Number(global.bytes_served) + bytes > 5_000_000_000) return false;
     await tx.execute(sql`UPDATE portfolio.rate_limit_buckets SET bytes_served = bytes_served + ${bytes}, count = count + 1 WHERE key = ${globalKey}`);
-    await tx.execute(sql`UPDATE portfolio.rate_limit_buckets SET count = ${expired ? 1 : Number(ip.count) + 1}, expires_at = ${expired ? new Date(Date.now() + 600_000) : new Date(ip.expires_at as string)} WHERE key = ${clientKey}`);
+    await tx.execute(sql`UPDATE portfolio.rate_limit_buckets SET count = ${expired ? 1 : Number(ip.count) + 1}, expires_at = ${(expired ? new Date(Date.now() + 600_000) : new Date(ip.expires_at as string)).toISOString()}::timestamptz WHERE key = ${clientKey}`);
     return true;
   });
   if (!allowed) return new Response(null, { status: 429, headers: { "Retry-After": "600", "Cache-Control": "no-store" } });

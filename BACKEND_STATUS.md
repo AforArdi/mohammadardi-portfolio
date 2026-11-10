@@ -1,5 +1,7 @@
 # Portfolio CMS implementation checkpoint
 
+Latest checkpoint: see [release readiness](RELEASE_READINESS.md) for the 2026-11-10 owner confirmations, PDF correction, dependency audit and remaining release tests, and [Codex feature review](CODEX_FEATURE_REVIEW.md) for the feature/security implementation. The dated record below describes the earlier 2026-11-09 baseline.
+
 Date: 2026-11-09 (Asia/Dhaka)
 
 ## Connected and implemented

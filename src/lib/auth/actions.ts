@@ -12,6 +12,7 @@ import { ownerIdentity } from "./guard";
 import { establishAdminSession, reserveMfaAttempt, reserveRateLimit } from "./queries";
 import { AuthorizationError } from "./policy";
 import { freshLoginIdentity } from "./fresh-login";
+import { withSecurityLock } from "./security";
 
 const nonceName = "portfolio_login_nonce";
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
@@ -29,6 +30,7 @@ export async function login(_previous: AuthState, form: FormData): Promise<AuthS
     const ip = await getDb().execute(reserveRateLimit(`login-ip:${digest(address)}`, 10, 900));
     const account = await getDb().execute(reserveRateLimit(`login-account:${digest(email)}`, 15, 900));
     if (!ip.length || !account.length) return { error: "Too many sign-in attempts. Please wait 15 minutes." };
+    const generation = await withSecurityLock(authConfig().ownerId, async (_tx, generation) => generation);
     const supabase = await supabaseServer();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || data.user?.id !== authConfig().ownerId) {
@@ -37,7 +39,10 @@ export async function login(_previous: AuthState, form: FormData): Promise<AuthS
     }
     const identity = await ownerIdentity(false);
     const nonce = randomBytes(32).toString("hex");
-    await getDb().insert(freshLoginNonces).values({ nonce: hash(nonce), userId: identity.userId, sessionId: identity.sessionId, expiresAt: new Date(Date.now() + 300_000) });
+    await withSecurityLock(identity.userId, async (tx, currentGeneration) => {
+      if (generation !== currentGeneration) throw new AuthorizationError();
+      await tx.insert(freshLoginNonces).values({ nonce: hash(nonce), userId: identity.userId, sessionId: identity.sessionId, securityGeneration: generation, expiresAt: new Date(Date.now() + 300_000) });
+    });
     (await cookies()).set(nonceName, nonce, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 300 });
   } catch { return { error: "Sign-in is unavailable right now. Please try again." }; }
   redirect("/admin/mfa");
@@ -68,7 +73,7 @@ export async function verifyMfa(_previous: AuthState, form: FormData): Promise<A
     if (error) return { error: "That code was not accepted. Try the current code; after three attempts, sign in again." };
     const verified = await ownerIdentity(true);
     if (verified.userId !== identity.userId || verified.sessionId !== identity.sessionId) throw new AuthorizationError();
-    const established = await getDb().execute(establishAdminSession(identity.nonce, verified.userId, verified.sessionId));
+    const established = await withSecurityLock(verified.userId, tx => tx.execute(establishAdminSession(identity.nonce, verified.userId, verified.sessionId)));
     if (!established.length) return { error: "This login has already been used or expired. Please sign in again." };
     (await cookies()).delete(nonceName);
   } catch { return { error: "Verification could not finish. Please sign in again." }; }
