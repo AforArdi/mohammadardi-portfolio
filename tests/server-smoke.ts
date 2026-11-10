@@ -37,7 +37,7 @@ if (resume.status === 200) {
   assert.match(resume.headers.get("content-type") || "", /application\/pdf/);
   const downloaded = await expect("/api/resume?download=1", 200, { headers: { "Accept-Encoding": "identity" } });
   assert.match(downloaded.headers.get("content-type") || "", /application\/pdf/);
-  assert.match(downloaded.headers.get("content-disposition") || "", /^attachment;.*filename="[^"]+\.pdf"/);
+  assert.equal(downloaded.headers.get("content-disposition"), 'attachment; filename="Mohammad-Ardi-Resume.pdf"');
   const pdfBytes = Buffer.from(await downloaded.arrayBuffer());
   assert.equal(pdfBytes.subarray(0, 5).toString("ascii"), "%PDF-", "The download must contain PDF bytes, not an error document");
   const length = downloaded.headers.get("content-length");

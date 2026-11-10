@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import FloatingSidebar from "@/components/FloatingSidebar";
 import Footer from "@/components/Footer";
+import PortfolioAtmosphere from "@/components/PortfolioAtmosphere";
 import { getPublicPortfolio } from "@/lib/content/public";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -16,9 +17,10 @@ export default async function PublicLayout({ children }: { children: React.React
   ];
   return (
     <>
+      <PortfolioAtmosphere />
       <Navbar sections={sections} displayName={data.profile.displayName} />
       <FloatingSidebar />
-      <div className="public-content">
+      <div className="public-content relative z-[1]">
         {children}
         <Footer displayName={data.profile.displayName} />
       </div>

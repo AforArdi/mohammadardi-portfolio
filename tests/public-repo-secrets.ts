@@ -21,7 +21,11 @@ if (!values.length) throw new Error("No configured private values were available
 const paths = [...new Set(execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { encoding: "utf8" }).split("\0").filter(Boolean))];
 for (const filename of paths) {
   if (/(^|\/)\.env(\.|$)/.test(filename) && filename !== ".env.example") throw new Error("A non-example environment file would be public");
-  const data = await readFile(filename);
+  const data = await readFile(filename).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return null; // Tracked file moved/deleted in the working tree.
+    throw error;
+  });
+  if (!data) continue;
   for (const [key, value] of values) if (value && data.includes(Buffer.from(value))) throw new Error(`Configured private value detected in ${filename} (${key})`);
 }
 const history = execFileSync("git", ["log", "--all", "-p", "--no-ext-diff", "--no-textconv", "--format=commit %h"], { maxBuffer: 128 * 1024 * 1024 });

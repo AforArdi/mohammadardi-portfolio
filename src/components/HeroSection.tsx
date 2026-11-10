@@ -22,11 +22,11 @@ export default function HeroSection({ profile }: { profile: PublicPortfolio["pro
               <span className="text-xs sm:text-sm text-muted-foreground font-mono">{profile.availabilityText}</span>
             </div>
           </Reveal>
-          <div className="order-1 lg:order-2 flex justify-center lg:justify-end relative lg:pr-4">
+          <div className="order-1 lg:order-2 flex justify-center lg:justify-center relative">
             <div className="relative">
               <div aria-hidden="true" className="absolute inset-2 border-2 border-primary/40 -rotate-12 -translate-x-8" />
               <div className="relative w-56 h-56 sm:w-64 sm:h-64 xl:w-80 xl:h-80 rounded-full overflow-hidden glow-avatar animate-float">
-                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt={profile.fullName} width={640} height={640} unoptimized priority sizes="(min-width: 1280px) 320px, (min-width: 640px) 256px, 224px" className="w-full h-full object-cover" /> : <span className="w-full h-full grid place-items-center font-mono text-8xl text-primary bg-card">{profile.displayName.slice(0, 1)}</span>}
+                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt={profile.fullName} width={640} height={640} unoptimized priority sizes="(min-width: 1280px) 320px, (min-width: 640px) 256px, 224px" className="w-full h-full object-cover scale-[1.06]" /> : <span className="w-full h-full grid place-items-center font-mono text-8xl text-primary bg-card">{profile.displayName.slice(0, 1)}</span>}
               </div>
               <div aria-hidden="true" className="absolute -right-4 top-1/4 w-16 h-20 dot-pattern opacity-40" />
             </div>

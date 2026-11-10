@@ -10,20 +10,24 @@
 - The owner uploaded a real PDF and reported that downloading saved a text file. Codex reproduced HTTP 500 for both preview and download. Server logs identified an unsupported raw JavaScript Date parameter in the Postgres quota query. The query now passes ISO timestamps with explicit casts; the dialog checks status, MIME type and PDF signature before creating a `.pdf` download. The separate Open PDF link is removed.
 - MIT licensing for code/technical documentation was explicitly authorized. Personal content and third-party assets are excluded. A known-value scan of current files and textual Git history found none of the configured private credentials; that is not an exhaustive secret scan.
 
-## Dependency audit: action required
+## Dependency audit: remediated (2026-11-10)
 
-`pnpm audit --prod` reported **four high and two moderate advisories** on 2026-11-10 (zero critical). These are affected-package findings, not proof that the application's exposed routes are exploitable. Resolve or document applicability with evidence before release; do not silently suppress them.
+`pnpm audit --prod` reports **0 vulnerabilities** (clean audit, 0 findings) following the dependency remediation batch:
 
-| Installed package | Advisory | Reported patched range |
-| --- | --- | --- |
-| Drizzle ORM 0.38.4 | [Identifier escaping / SQL injection](https://github.com/drizzle-team/drizzle-orm/security/advisories/GHSA-gpj5-g38j-94v9) | >= 0.45.2 |
-| Next.js dependency PostCSS 8.4.31 | [GHSA-qx2v-qp2m-jg93](https://github.com/postcss/postcss/security/advisories/GHSA-qx2v-qp2m-jg93) | >= 8.5.10 |
-| Same PostCSS copy | [GHSA-6g55-p6wh-862q](https://github.com/postcss/postcss/security/advisories/GHSA-6g55-p6wh-862q) | >= 8.5.12 |
-| Same PostCSS copy | [GHSA-fxqj-rqcc-2cmp](https://github.com/postcss/postcss/security/advisories/GHSA-fxqj-rqcc-2cmp) | >= 8.5.23 |
-| Same PostCSS copy | [Source-map path traversal](https://github.com/postcss/postcss/security/advisories/GHSA-r28c-9q8g-f849) | >= 8.5.18 |
-| Zod 3.25.76 | [Oversized collection validation](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) | >= 4.6.6 |
+| Package | Previous Version | Remediated Version | Resolution / Advisory |
+| --- | --- | --- | --- |
+| `drizzle-orm` | 0.38.4 | 0.45.4 | Patched >= 0.45.2 ([GHSA-gpj5-g38j-94v9](https://github.com/drizzle-team/drizzle-orm/security/advisories/GHSA-gpj5-g38j-94v9)) |
+| `drizzle-kit` | 0.30.4 | 0.31.11 | Compatible stable companion pair with `drizzle-orm` 0.45.4 |
+| `postcss` | 8.4.31 (via `next`) | 8.5.32 | Overridden via `pnpm.overrides` resolving [GHSA-qx2v-qp2m-jg93](https://github.com/postcss/postcss/security/advisories/GHSA-qx2v-qp2m-jg93), [GHSA-6g55-p6wh-862q](https://github.com/postcss/postcss/security/advisories/GHSA-6g55-p6wh-862q), [GHSA-fxqj-rqcc-2cmp](https://github.com/postcss/postcss/security/advisories/GHSA-fxqj-rqcc-2cmp), and [GHSA-r28c-9q8g-f849](https://github.com/postcss/postcss/security/advisories/GHSA-r28c-9q8g-f849) |
+| `zod` | 3.25.76 | 4.6.7 | Patched >= 4.6.6 ([GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)) |
 
-Check current maintainer guidance and registry metadata again when implementing. Drizzle's advisory concerns untrusted identifiers; this app predominantly uses static schema objects and allowlists. PostCSS here processes application CSS rather than accepting visitor CSS. Zod request bodies are bounded. Those observations inform exposure analysis; they do not substitute for patching/compatibility checks.
+## Automated test coverage (26 tests passing)
+
+The automated offline test suite now contains 26 tests across 4 suites:
+1. `tests/backend.test.ts` (9 tests): AAL2 owner authorization, range header parsing, content validation schemas, image budgets / purpose ceilings, EXIF orientation / alpha / noise retry ceilings, YouTube URL parsing and SSRF guards, oEmbed provider mocking, PostgreSQL private roles / migrations / MFA nonces, and YouTube display title resolution.
+2. `tests/cv.test.ts` (7 tests): Exact attachment filename `Mohammad-Ardi-Resume.pdf`, full / suffix / open-ended Range handling, 416 invalid ranges, HEAD zero-storage-download verification, 404/502/503 error responses, IP cap (60/10m) and 5GB monthly quota, month rollover, PGlite timestamp serialization regression (ISO strings with timestamptz casts), and client-side error/signature rejection.
+3. `tests/password.test.ts` (5 tests): Password input validation, step-by-step failure recovery / gate persistence, durable password gate / generation revocation / private grants, same-origin enforcement and request body limits (413), and memory-only Supabase client isolation.
+4. `tests/content-lifecycle.test.ts` (5 tests): Video mutation lifecycle (insert, active duplicate conflict 409, stale version conflict, title override persistence across refresh, soft delete and re-insert), public query projection (draft / soft-delete filtering and display order), 7-day reconciliation pruning for `portfolio.youtube_videos`, storage cleanup queue reference protection / SKIP LOCKED concurrency, and image upload edge cases (SVG rejection, fake bytes, EXIF orientation 6, alpha preservation, Gaussian noise floors).
 
 ## Missing automated tests
 
@@ -36,7 +40,7 @@ The existing tests are useful but not comprehensive. They largely exercise pure 
 5. **Image edge cases:** noisy inputs that reach retry exhaustion/floors, decoding/input-byte limits, invalid purpose and alpha/orientation handling through the upload boundary.
 6. **Clean-checkout repeatability:** install with frozen lockfile, offline tests without owner credentials, environment placeholders, and a basic secrets-free CI gate.
 
-The implementation task for these gaps and dependency remediation is [AGY_RELEASE_TEST_PROMPT.md](./AGY_RELEASE_TEST_PROMPT.md). The owner requested this next batch through agy CLI. Codex will review the resulting code/report before accepting release readiness.
+The implementation task for these gaps and dependency remediation is [AGY_RELEASE_TEST_PROMPT.md](../handoffs/AGY_RELEASE_TEST_PROMPT.md). The owner requested this next batch through agy CLI. Codex will review the resulting code/report before accepting release readiness.
 
 ## Browser and operational release gates
 

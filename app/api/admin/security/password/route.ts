@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { getDb } from "@/db";
 import { requireOwnerAdmin } from "@/lib/auth/guard";
-import { authConfig } from "@/lib/auth/config";
+import { createIsolatedAuthClient } from "@/lib/auth/isolated-client";
 import { withSecurityLock } from "@/lib/auth/security";
 import { deleteLoginProofs, finishPasswordChange, revokeAuthorizations, startPasswordChange } from "@/lib/auth/security-queries";
 import { reserveRateLimit } from "@/lib/auth/queries";
@@ -28,14 +27,10 @@ export async function POST(request: Request) {
     const allowed = await getDb().execute(reserveRateLimit(`password-change:${owner.userId}`, 5, 900));
     if (!allowed.length) throw new HttpError(429, "Too many attempts. Wait 15 minutes before trying again.");
     const input = passwordChangeInput.parse(JSON.parse((await boundedBody(request, 4000)).toString("utf8")));
-    const config = authConfig();
     const { data: { user }, error: userError } = await owner.supabase.auth.getUser();
     if (userError || !user?.email) throw new HttpError(401, "Sign in again before changing your password.");
     // Publishable key and private memory-only session: never replace browser SSR cookies.
-    const isolated = createClient(config.url, config.key, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: { fetch: (url, options) => fetch(url, { ...options, signal: options?.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000) }) },
-    });
+    const isolated = createIsolatedAuthClient();
     const operation = randomUUID();
     try {
       await runPasswordChange({

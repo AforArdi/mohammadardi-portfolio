@@ -5,7 +5,7 @@ import tseslint from "typescript-eslint";
 import nextPlugin from "@next/eslint-plugin-next";
 
 export default tseslint.config(
-  { ignores: ["dist", ".next", "next-env.d.ts", "ui-screenshots/**", ".agents/**", "src/db/migrations/**"] },
+  { ignores: ["dist", ".next", "next-env.d.ts", "public/**", "ui-screenshots/**", ".agents/**", "src/db/migrations/**"] },
   {
     plugins: { "@next/next": nextPlugin },
     rules: { ...nextPlugin.configs.recommended.rules, ...nextPlugin.configs["core-web-vitals"].rules },

@@ -4,7 +4,7 @@ A personal portfolio with an owner dashboard. Update your content without editin
 
 Built by **Md Miftahul Islam Ardi**. Original site: [mohammadardi.online](https://mohammadardi.online). The live site may differ from the latest repository code.
 
-> **Release status:** this is a working project, not yet a fully verified production template. Dependency advisories and additional tests remain. See [release readiness](./RELEASE_READINESS.md).
+> **Release status:** this is a working project, not yet a fully verified production template. Dependency advisories and additional tests remain. See [release readiness](../docs/reviews/RELEASE_READINESS.md).
 
 ## What can I edit from the dashboard?
 
@@ -97,7 +97,7 @@ Seeding keeps existing records. After setup, use the dashboard to edit content; 
 
 Visit [localhost:3000/admin/login](http://localhost:3000/admin/login). Sign in and enroll an authenticator such as Google Authenticator. Keep a trusted backup of your authenticator setup.
 
-Upload your actual PDF under **Profile & CV** to enable the resume button. Use **Security** for password changes. For troubleshooting and offline recovery, see [backend setup and operation](./BACKEND_SETUP.md).
+Upload your actual PDF under **Profile & CV** to enable the resume button. Use **Security** for password changes. For troubleshooting and offline recovery, see [backend setup and operation](../docs/setup/BACKEND_SETUP.md).
 
 ## Change the theme
 
@@ -135,7 +135,7 @@ Some branding still lives in source files:
 - **Sitemap/robots domain:** `app/sitemap.ts`, `app/robots.ts`.
 - **Social preview/favicon:** `app/opengraph-image.tsx`, `app/icon.svg`.
 - **Personal labels:** search for `Ardi` and `mohammadardi.online`, including the admin header and resume labels.
-- **Contact provider:** `src/components/ContactSection.tsx` contains the original public EmailJS/reCAPTCHA identifiers. Replace these with your own and configure provider-side restrictions/verification before enabling the form. Do not use the original owner's email service for your copy.
+- **Contact provider:** Set `NEXT_PUBLIC_EMAILJS_SERVICE_ID`, `NEXT_PUBLIC_EMAILJS_TEMPLATE_ID`, `NEXT_PUBLIC_EMAILJS_PUBLIC_KEY`, and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` in your environment. Configure Google allowed domains (including localhost for development) and provider-side CAPTCHA/origin restrictions before enabling the form. Do not use the original owner's email service for your copy.
 
 Changing `APP_URL` alone does not change hardcoded SEO URLs. Replace all personal assets with your own material.
 
@@ -184,14 +184,14 @@ The bundle check needs a completed build. The repository check uses your local e
 
 ## Deploying
 
-Complete the remaining checks in [RELEASE_READINESS.md](./RELEASE_READINESS.md). Resolve applicable dependency advisories, verify real PDF/contact flows, and rehearse backup/restore before declaring a production release.
+Complete the remaining checks in [RELEASE_READINESS.md](../docs/reviews/RELEASE_READINESS.md). Resolve applicable dependency advisories, verify real PDF/contact flows, and rehearse backup/restore before declaring a production release.
 
 Set the runtime environment separately from local operator tools. Keep database-admin credentials, migration credentials, and role passwords off the web app; it uses restricted `DATABASE_POOL_URL`. Review `vercel.json` for daily cleanup; other hosts need an equivalent authenticated scheduler.
 
-No script deploys the site or changes your domain automatically. See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for detailed operations.
+No script deploys the site or changes your domain automatically. See [BACKEND_SETUP.md](../docs/setup/BACKEND_SETUP.md) for detailed operations.
 
 ## License
 
-Code and technical documentation use the [MIT License](./LICENSE). Reuse and adapt them, including your own theme, while keeping the license notice.
+Code and technical documentation use the [MIT License](../LICENSE). Reuse and adapt them, including your own theme, while keeping the license notice.
 
 **Personal content is excluded:** the owner's photos, CV, certificates, biography, and personal portfolio material are not licensed for reuse. Third-party assets and trademarks keep their own rights and licenses. Use your own content.

@@ -179,6 +179,14 @@
 }
 
 /* Custom scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
 body { min-width: 320px; }
 section[id] { scroll-margin-top: 1rem; }
@@ -222,3 +230,6 @@ section[id] { scroll-margin-top: 1rem; }
   transform: scale(0.9);
   transform-origin: 0 0;
 }
+
+/* Header follows the content gutter; the social rail keeps its position. */
+@media (min-width:1280px) { .public-header { padding-inline-start:5rem; } }

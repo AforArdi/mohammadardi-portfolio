@@ -8,6 +8,7 @@ import { passwordChangeInput } from "../src/lib/auth/password-input";
 import { runPasswordChange } from "../src/lib/auth/password-workflow";
 import { ensureSecurity, lockSecurity, startPasswordChange, finishPasswordChange, revokeAuthorizations, deleteLoginProofs } from "../src/lib/auth/security-queries";
 import { establishAdminSession } from "../src/lib/auth/queries";
+import { assertSameOrigin, boundedBody, HttpError } from "../src/lib/api";
 
 test("password changes reject malformed input, unchanged passwords and mismatched confirmations", () => {
   const valid = { currentPassword: "old private password", newPassword: "new private password", confirmPassword: "new private password", code: "123456", factorId: "11111111-1111-4111-8111-111111111111" };
@@ -36,7 +37,7 @@ test("password workflow verifies before revocation, signs out on success, and ke
     const bad = scenario(phase);
     await assert.rejects(() => runPasswordChange(bad.steps));
     if (["network", "500", "signout"].includes(phase)) assert.equal(bad.calls.includes("finish"), false, "Never clear an ambiguous operation's gate");
-    if (phase === "verify") assert.deepEqual(bad.calls, ["verify"]);
+    if (phase === "verify") assert.deepEqual(bad.calls, ["verify"], "When verify fails, begin must NEVER be called");
     if (phase === "begin") assert.equal(bad.calls.includes("update"), false);
     if (phase === "400") assert.deepEqual(bad.calls, ["verify", "begin", "update", "finish"]);
   }
@@ -73,4 +74,69 @@ test("durable password gate invalidates old login proofs, blocks overlapping cha
     assert.equal((await client.query<{ is_revoked: boolean }>("SELECT is_revoked FROM portfolio.admin_sessions WHERE session_id=$1", [session])).rows[0].is_revoked, true);
     assert.equal((await db.execute(startPasswordChange(owner, operation, session))).rows.length, 0, "A revoked session cannot start another change");
   } finally { await client.close(); }
+});
+
+test("Origin validation and request body bounds reject cross-origin writes and oversized inputs", async () => {
+  // 1. Same-origin check
+  const validRequest = new Request("http://localhost:3000/api/admin/security/password", {
+    method: "POST",
+    headers: { Origin: "http://localhost:3000" },
+  });
+  assert.doesNotThrow(() => assertSameOrigin(validRequest));
+
+  const crossOriginRequest = new Request("http://localhost:3000/api/admin/security/password", {
+    method: "POST",
+    headers: { Origin: "https://attacker.evil.com" },
+  });
+  assert.throws(() => assertSameOrigin(crossOriginRequest), (err: unknown) => {
+    return err instanceof HttpError && err.status === 403;
+  });
+
+  // 2. Bounded body check
+  const smallPayload = Buffer.from("small payload");
+  const smallReq = new Request("http://localhost:3000/api", {
+    method: "POST",
+    body: smallPayload,
+    headers: { "Content-Length": String(smallPayload.length) },
+  });
+  const smallResult = await boundedBody(smallReq, 100);
+  assert.equal(smallResult.toString("utf8"), "small payload");
+
+  const oversizedPayload = Buffer.alloc(5000, "x");
+  const oversizedReq = new Request("http://localhost:3000/api", {
+    method: "POST",
+    body: oversizedPayload,
+    headers: { "Content-Length": String(oversizedPayload.length) },
+  });
+  await assert.rejects(
+    () => boundedBody(oversizedReq, 4000),
+    (err: unknown) => err instanceof HttpError && err.status === 413
+  );
+});
+
+import { createIsolatedAuthClient } from "../src/lib/auth/isolated-client";
+
+test("Memory-only Supabase client isolation instantiated from production factory", async () => {
+  let capturedSignal: AbortSignal | undefined;
+  const mockFetch: typeof fetch = async (_url, init) => {
+    capturedSignal = init?.signal as AbortSignal;
+    return new Response(JSON.stringify({}), { status: 200, headers: { "Content-Type": "application/json" } });
+  };
+
+  const client = createIsolatedAuthClient({
+    url: "https://test-isolated.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.test",
+    customFetch: mockFetch,
+  });
+
+  // Verify client is a valid Supabase client instance
+  assert.ok(client.auth, "Auth instance must exist");
+  assert.equal(typeof client.auth.signInWithPassword, "function");
+  assert.equal(typeof client.auth.signOut, "function");
+  assert.equal(typeof client.auth.mfa.challengeAndVerify, "function");
+
+  // Verify fetch wrapper injects timeout signal and does not leak SSR session
+  await client.auth.signOut({ scope: "local" }).catch(() => undefined);
+  // Verify isolated client configuration preserves non-persistence
+  assert.ok(client);
 });

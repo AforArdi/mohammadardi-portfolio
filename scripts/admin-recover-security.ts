@@ -8,7 +8,7 @@ try {
   const [state] = await client`SELECT password_change_id, password_change_started_at FROM portfolio.owner_security WHERE user_id=${owner}::uuid`;
   if (!state?.password_change_id) { console.log("No interrupted password change is blocking access."); }
   else if (!process.argv.includes("--execute")) {
-    console.log(`Pending security operation: ${state.password_change_id}. Stop the application and wait at least 15 minutes before using the recovery command documented in BACKEND_SETUP.md.`);
+    console.log(`Pending security operation: ${state.password_change_id}. Stop the application and wait at least 15 minutes before using the recovery command documented in docs/setup/BACKEND_SETUP.md.`);
   } else {
     const operation = process.argv.find(argument => argument.startsWith("--operation="))?.slice(12);
     if (!operation || !process.argv.includes("--confirm-app-stopped") || operation !== state.password_change_id) throw new Error("Stop the application, then supply --confirm-app-stopped and the exact --operation ID.");

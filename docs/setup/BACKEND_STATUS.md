@@ -1,6 +1,6 @@
 # Portfolio CMS implementation checkpoint
 
-Latest checkpoint: see [release readiness](RELEASE_READINESS.md) for the 2026-11-10 owner confirmations, PDF correction, dependency audit and remaining release tests, and [Codex feature review](CODEX_FEATURE_REVIEW.md) for the feature/security implementation. The dated record below describes the earlier 2026-11-09 baseline.
+Latest checkpoint: see [release readiness](../reviews/RELEASE_READINESS.md) for the 2026-11-10 owner confirmations, PDF correction, dependency audit and remaining release tests, and [Codex feature review](../reviews/CODEX_FEATURE_REVIEW.md) for the feature/security implementation. The dated record below describes the earlier 2026-11-09 baseline.
 
 Date: 2026-11-09 (Asia/Dhaka)
 
@@ -46,4 +46,4 @@ Date: 2026-11-09 (Asia/Dhaka)
 
 This owner-requested checkpoint is saved on the current `main` branch after baseline commit `25da885`. It records the connected CMS and the remaining release checks; no push or deployment is included. The owner's pre-existing `.gitignore` edit and deletion of old review reports are left outside this commit. New operational documentation is at the root because the owner now ignores `docs/`.
 
-See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for configuration, migrations, recovery, cleanup, and development commands.
+See [BACKEND_SETUP.md](BACKEND_SETUP.md) for configuration, migrations, recovery, cleanup, and development commands.
