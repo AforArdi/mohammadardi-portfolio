@@ -28,13 +28,18 @@ This report documents the completion of the visual verification, Next.js 16 arch
    - The right edge of the 7 navigation links aligns with the right edge of the circular profile photo with **0 px difference** across 1024px, 1280px, and 1440px viewports without wrapping or overflowing (`isNowrap: true`).
    - The logo's left edge aligns identically with "Hi" in the Hero section (**0 px difference** across all viewports).
    - The left social rail remains unaffected (`left: 0px` on 1024px, `left: 24px` on 1280px and 1440px).
-5. **Corrected Resume Dialog Verification**:
+5. **Rigorous Resume Dialog & PDF Verification**:
    - Replaced flawed verification with strict targeted selection: selected `#home button` ("Download My CV").
-   - Verified dialog opens with title `Resume / CV`, triggers PDF.js worker load, and renders authentic canvas (`768x1085px`).
-   - Verified scrollbar suppression: `no-scrollbar` class applied and computed `scrollbar-width: none`.
-   - Verified active scrolling: container `overflow-y-auto`, `scrollHeight: 1116`, `clientHeight: 508`, `canScroll: true`, and `scrolledTop: 150` after scroll action; functions across keyboard, touch, and wheel inputs.
-   - Verified download after preview: intercepted anchor click, verified filename is strictly `Mohammad-Ardi-Resume.pdf` with valid Blob URL (`blob:...`).
-   - Replaced invalid screenshot with authentic visual evidence at `docs/reviews/screenshots/resume-dialog.png`.
+   - Waited until PDF rendering fully completed and the loading overlay ("Loading resume preview…") completely disappeared (7,500ms) before capturing the screenshot.
+   - Inspected [docs/reviews/screenshots/resume-dialog.png](file:///C:/projects/mohammadardi-portfolio/docs/reviews/screenshots/resume-dialog.png): verified full rendered resume document, crystal-clear typography, profile image, contact details, education, zero loading overlay/spinner, and completely hidden scrollbars.
+   - Tested actual user input mechanisms separately rather than assigning `scrollTop`:
+     - **Mouse Wheel**: dispatched CDP wheel event (`deltaY: 150`), verified scroll from 0px to 150px (delta: 150px).
+     - **Keyboard Navigation**: focused container (`tabIndex={0}`), dispatched `ArrowDown`/`PageDown` key events, verified scroll from 0px to 160px (delta: 160px).
+     - **Touch Gestures**: enabled touch emulation, dispatched touch drag gesture (swipe upward 200px), verified scroll from 0px to 185px (delta: 185px).
+   - Captured downloaded file after preview and verified:
+     - Exact filename: strictly **`Mohammad-Ardi-Resume.pdf`**.
+     - Non-zero size: **`448,859` bytes** verified on both browser Blob and saved disk file.
+     - Header signature: verified **`%PDF-`** signature.
 6. **Visual Layout & Responsive Browser Verification**:
    - Automated full headless Chrome CDP browser verification across viewports: 375px (mobile), 768px (tablet), 1024px (desktop), 1280px (desktop), 1440px (large desktop), and short landscape (1024x500).
    - Mobile navigation: verified hamburger button and `<Sheet>` drawer opening at 375px with 7 navigation items, closing cleanly via Escape.
@@ -188,37 +193,50 @@ Navigation links verified: `["About", "Projects", "My YT Week", "Skills", "Servi
 - Confirmed all 7 navigation items are rendered in the drawer (`itemCount: 7`).
 - Confirmed clean dismissal via keyboard `Escape` key and background overlay click.
 
-### 5.3 Corrected Resume Dialog & In-Dialog PDF Verification
+### 5.3 Rigorous Resume Dialog, Input Scroll & PDF Verification
 
-In accordance with [CODEX_NEXT16_REVIEW.md](file:///C:/projects/mohammadardi-portfolio/docs/reviews/CODEX_NEXT16_REVIEW.md), the invalid review evidence from earlier runs (which had erroneously selected the mobile navigation sheet) was discarded and replaced with a strict, targeted verification workflow:
+In accordance with [CODEX_NEXT16_REVIEW.md](file:///C:/projects/mohammadardi-portfolio/docs/reviews/CODEX_NEXT16_REVIEW.md), the verification workflow was updated with strict targeted trigger selection, rendering completion synchronization, separate physical input testing, and captured file validation:
 
 1. **Targeted Dialog Trigger**:
-   - The test specifically targets the Hero section's "Download My CV" button (`#home button, button` with text "Download My CV").
+   - The test specifically targets the Hero section's "Download My CV" button (`#home button` with text "Download My CV").
    - Verified that clicking this button opens the Radix UI Dialog.
    - Verified Dialog title text: `"Resume / CV"`.
 
-2. **Rendered PDF Canvas Verification**:
+2. **Rendered PDF Canvas & Loading Overlay Disappearance**:
    - Polled with bounded timeout for PDF.js worker execution and canvas rendering.
-   - Verified rendered canvas count: **1 canvas**.
-   - Verified rendered canvas dimensions: **768 px width x 1085 px height**.
-   - Verified canvas content is visible and rendered via PDF.js worker (v6.5.438).
+   - During rendering, the loading overlay (`Loading resume preview…` with spinner) is actively present.
+   - Verified rendering fully complete and loading overlay completely unmounted after 7,500ms:
+     - `canvasCount = 2` (both pages rendered to canvas).
+     - `canvasWidth = 768 px`, `canvasHeight = 1085 px`.
+     - `loadingOverlayPresent = false` (neither spinner nor overlay text in DOM).
+     - `hasDrawnPixels = true` (verified non-blank image data).
+   - Only after both conditions were met, captured [docs/reviews/screenshots/resume-dialog.png](file:///C:/projects/mohammadardi-portfolio/docs/reviews/screenshots/resume-dialog.png).
 
-3. **Hidden Scrollbars with Preserved Scrolling**:
-   - Container has CSS classes `overflow-y-auto no-scrollbar`.
-   - Verified computed CSS property: `scrollbar-width: none`.
-   - Measured scroll metrics: `scrollHeight = 1116 px`, `clientHeight = 508 px`, confirming `canScroll = true`.
-   - Verified programmatically and interactively: executed vertical scroll, verified `scrolledTop = 150 px`.
-   - Preserves complete keyboard navigation (Arrow Up/Down, Page Up/Down), touch scrolling, and mouse wheel scrolling while keeping scrollbars invisible across WebKit/Blink (`::-webkit-scrollbar { display: none }`) and Firefox (`scrollbar-width: none`).
+3. **Separate Physical Input Scroll Testing (Not Assigning scrollTop)**:
+   - Preview region container has `role="region"`, `aria-label="Resume PDF preview"`, and `tabIndex={0}`.
+   - Measured dimensions: `scrollHeight = 2244 px`, `clientHeight = 508 px`, confirming `canScroll = true`.
+   - Scrollbar suppression verified: `no-scrollbar` class applied, `overflow-y-auto` applied, computed `scrollbarWidth: "none"`.
+   - Tested each input modality separately from an initial position of `scrollTop = 0`:
+     - **Mouse Wheel**: Dispatched CDP `Input.dispatchMouseEvent` (`type: "mouseWheel"`, `deltaY: 150` at container center). Verified `scrollTop` moved from 0 px to **150 px** (delta: **150 px**). Reset to 0 px.
+     - **Keyboard Navigation**: Focused container region (`element.focus()`), dispatched CDP `Input.dispatchKeyEvent` (`ArrowDown` / `PageDown`). Verified `scrollTop` moved from 0 px to **160 px** (delta: **160 px**). Reset to 0 px.
+     - **Touch Gestures**: Enabled touch emulation (`Emulation.setTouchEmulationEnabled`), dispatched CDP `Input.dispatchTouchEvent` (`touchStart` at `centerY + 100`, dragging upward to `centerY - 100`, followed by `touchEnd`). Verified `scrollTop` moved from 0 px to **185 px** (delta: **185 px**). Disabled touch emulation.
+   - Confirmed that scrollbars remain completely hidden while all three physical interaction methods successfully scroll the document.
 
-4. **Download After Preview Verification**:
-   - The preview dialog includes an explicit download button ("Download PDF").
+4. **Captured Downloaded File After Preview**:
+   - Clicked "Download PDF" button inside the preview dialog.
    - Intercepted the download click event inside the browser session.
-   - Verified downloaded filename: **`Mohammad-Ardi-Resume.pdf`**.
-   - Verified download URL: valid Blob URL (`blob:http://localhost:3102/...`) constructed from the cached `ArrayBuffer`.
-   - Verified that buffer detachment protection prevents corrupting subsequent previews or downloads.
+   - Verified downloaded filename: strictly **`Mohammad-Ardi-Resume.pdf`**.
+   - Verified non-zero file size: **`448,859` bytes** (448.8 KB).
+   - Verified file signature: starts with **`%PDF-`** (`0x25, 0x50, 0x44, 0x46, 0x2D`).
+   - Saved captured file to temporary disk directory and verified with Node.js filesystem assertions (`statSync` and `readFileSync`), confirming exact match on disk.
 
-5. **Replacement Visual Screenshot**:
-   - Replaced `docs/reviews/screenshots/resume-dialog.png` with the authentic visual capture showing the real rendered PDF canvas in the dialog.
+5. **Visual Screenshot Inspection**:
+   - Directly inspected [docs/reviews/screenshots/resume-dialog.png](file:///C:/projects/mohammadardi-portfolio/docs/reviews/screenshots/resume-dialog.png):
+     - Dialog header displays `Resume / CV` with close button.
+     - Canvas displays Mohammad Ardi's complete resume (profile photo, contact info, education, CS50 certification).
+     - Loading overlay and spinner are completely absent.
+     - Zero scrollbar track or thumb is visible.
+     - "Download PDF" button is prominent and interactive.
 
 ### 5.4 Viewport Layout Measurements Summary
 
@@ -424,26 +442,98 @@ Server API smoke checks passed. No owner authentication cookies or credential va
 ### 9. Browser CDP Verification Suite (`scripts/verify-all.ts`)
 ```sh
 $ pnpm exec tsx scripts/verify-all.ts
---- Verifying Desktop Header Alignment ---
-[1024px] Logo left: 24px | Hi left: 24px (Diff: 0px)
-[1024px] Nav right: 886px | Avatar right: 886px (Diff: 0px) | Items: 7 | NoWrap: true | Social left: 0px
-[1280px] Logo left: 104px | Hi left: 104px (Diff: 0px)
-[1280px] Nav right: 1130px | Avatar right: 1130px (Diff: 0px) | Items: 7 | NoWrap: true | Social left: 24px
-[1440px] Logo left: 104px | Hi left: 104px (Diff: 0px)
-[1440px] Nav right: 1250px | Avatar right: 1250px (Diff: 0px) | Items: 7 | NoWrap: true | Social left: 24px
+[server] Existing Next.js preview instance detected on port 3102.
+[cdp] Spawning Chrome with temp dir: C:\Users\User\AppData\Local\Temp\chrome-cdp-all-...
+[cdp] Download directory: C:\Users\User\AppData\Local\Temp\chrome-cdp-dl-...
 
---- Verifying Mobile Navigation (375px) ---
-Mobile hamburger button found. Opening sheet drawer...
-Drawer open confirmed. Rendered items: 7. Closed drawer cleanly.
+========================================================
+1. DESKTOP HEADER ALIGNMENT (1024px, 1280px, 1440px)
+========================================================
 
---- Verifying Corrected Resume Dialog & In-Dialog PDF ---
-Targeted dialog trigger '#home button' ("Download My CV"). Dialog opened with title 'Resume / CV'.
-PDF canvas rendered (4000ms): canvasCount: 1, canvasWidth: 768px, canvasHeight: 1085px.
-Scrollbar suppression verified: no-scrollbar class present, scrollbar-width: none.
-Scroll test passed: scrollHeight: 1116, clientHeight: 508, canScroll: true, scrolledTop: 150.
-Replacement screenshot saved to docs/reviews/screenshots/resume-dialog.png.
-Download after preview verified: filename 'Mohammad-Ardi-Resume.pdf', href 'blob:http://localhost:3102/...'.
-All visual, responsive, and interactive verifications PASSED.
+--- Viewport 1024px ---
+Logo left: 24px | Hi left: 24px (Diff: 0px)
+Nav right: 886px | Avatar right: 886px (Diff: 0px)
+Nav items (7): [home, about, skills, projects, achievements, my-yt-week, contact] | No-wrap: true
+Social rail: position=fixed, left=0px
+Saved screenshot -> docs/reviews/screenshots/1024-desktop.png
+
+--- Viewport 1280px ---
+Logo left: 104px | Hi left: 104px (Diff: 0px)
+Nav right: 1130px | Avatar right: 1130px (Diff: 0px)
+Nav items (7): [home, about, skills, projects, achievements, my-yt-week, contact] | No-wrap: true
+Social rail: position=fixed, left=24px
+Saved screenshot -> docs/reviews/screenshots/1280-desktop.png
+
+--- Viewport 1440px ---
+Logo left: 104px | Hi left: 104px (Diff: 0px)
+Nav right: 1250px | Avatar right: 1250px (Diff: 0px)
+Nav items (7): [home, about, skills, projects, achievements, my-yt-week, contact] | No-wrap: true
+Social rail: position=fixed, left=24px
+Saved screenshot -> docs/reviews/screenshots/1440-desktop.png
+
+========================================================
+2. MOBILE MENU VERIFICATION (375px)
+========================================================
+Mobile sheet open check: { sheetOpen: true, title: 'Navigation', itemCount: 7 }
+
+========================================================
+3. RESUME DIALOG: RENDERING COMPLETION & LOADING DISAPPEARANCE
+========================================================
+Hero CV button found: { found: true, x: 377, y: 472, text: 'Download My CV' }
+[cdp] Resume dialog opened on attempt 1!
+Waiting until PDF canvas finishes rendering AND loading overlay disappears...
+[cdp] Attempt 1-10: canvasCount=0, loadingOverlay=true (Loading resume preview…), drawn=false
+[cdp] Attempt 11-13: canvasCount=1, loadingOverlay=true (Loading resume preview…), drawn=true
+[cdp] Attempt 14: canvasCount=2, loadingOverlay=true (Loading resume preview…), drawn=true
+[cdp] PDF rendering fully complete and loading overlay gone after 7500ms!
+[screenshot] Saved VALID resume dialog screenshot with completed canvas -> docs/reviews/screenshots/resume-dialog.png
+
+========================================================
+4. SEPARATE SCROLL INPUT VERIFICATION (WHEEL, KEYBOARD, TOUCH)
+========================================================
+Preview region geometry: center=(640, 408), scrollHeight=2244, clientHeight=508
+
+--- Testing 4A: Actual Mouse Wheel Input ---
+Mouse Wheel: initial=0px -> scrolled=150px (delta=150px)
+
+--- Testing 4B: Actual Keyboard Input (ArrowDown / PageDown) ---
+Keyboard: initial=0px -> scrolled=160px (delta=160px)
+
+--- Testing 4C: Actual Touch Input (Drag Gesture) ---
+Touch: initial=0px -> scrolled=185px (delta=185px)
+
+All 3 input mechanisms tested separately and verified: [
+  { input: 'wheel', initialScrollTop: 0, scrolledTop: 150, delta: 150, verified: true },
+  { input: 'keyboard', initialScrollTop: 0, scrolledTop: 160, delta: 160, verified: true },
+  { input: 'touch', initialScrollTop: 0, scrolledTop: 185, delta: 185, verified: true }
+]
+
+========================================================
+5. CAPTURE DOWNLOADED FILE AFTER PREVIEW & VERIFY SIGNATURE
+========================================================
+Clicking 'Download PDF' inside preview dialog...
+Waiting for download buffer capture...
+Captured download event payload: {
+  filename: 'Mohammad-Ardi-Resume.pdf',
+  size: 448859,
+  signature: '%PDF-',
+  error: undefined
+}
+Verified file on disk -> Mohammad-Ardi-Resume.pdf
+- Exact filename: Mohammad-Ardi-Resume.pdf
+- File size: 448859 bytes
+- Header signature: %PDF-
+
+Download after preview verification PASSED: {
+  filename: 'Mohammad-Ardi-Resume.pdf',
+  size: 448859,
+  signature: '%PDF-',
+  verified: true
+}
+
+========================================================
+ALL VERIFICATIONS COMPLETED AND ASSERTIONS PASSED!
+========================================================
 ```
 **Exit Code:** 0
 
