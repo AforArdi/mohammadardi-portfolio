@@ -9,6 +9,7 @@ function connect(url: string) {
   return drizzle(client, { schema });
 }
 export function getDb() {
-  if (!process.env.DATABASE_POOL_URL) throw new Error("Database is not configured. Follow docs/setup/BACKEND_SETUP.md.");
-  return connection ??= connect(process.env.DATABASE_POOL_URL);
+  const url = process.env.DATABASE_POOL_URL || process.env.POSTGRES_URL;
+  if (!url) throw new Error("Database is not configured. Follow docs/setup/BACKEND_SETUP.md.");
+  return connection ??= connect(url);
 }

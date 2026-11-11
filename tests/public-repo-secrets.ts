@@ -6,9 +6,9 @@ import nextEnv from "@next/env";
 nextEnv.loadEnvConfig(process.cwd());
 const values = Object.entries(process.env).filter(([key, value]) =>
   value && value.length >= 8 && !key.startsWith("NEXT_PUBLIC_") &&
-  (/^DATABASE_/.test(key) || /(?:SECRET|PASSWORD)$/.test(key))
+  (/^DATABASE_|^POSTGRES_/.test(key) || /(?:SECRET|PASSWORD)$/.test(key))
 );
-for (const key of ["DATABASE_ADMIN_URL", "DATABASE_POOL_URL", "DATABASE_MIGRATION_URL"]) {
+for (const key of ["DATABASE_ADMIN_URL", "DATABASE_POOL_URL", "DATABASE_MIGRATION_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL", "POSTGRES_URL_NON_POOLING"]) {
   const value = process.env[key];
   if (value) {
     try {

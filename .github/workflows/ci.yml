@@ -43,6 +43,6 @@ jobs:
       - name: TypeScript type check
         run: pnpm typecheck
         env:
-          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "placeholder-publishable-key"
-          APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://klwiaojcrxkbganysaep.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtMd2lhb2pjcnhrYmdhbnlzYWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0OTIwNDAsImV4cCI6MjA2ODA2ODA0MH0.o18W261VYZV2N94y2l4XkR45kS3vJ9f9N_fCg-d8fXQ' }}
+          APP_URL: ${{ secrets.APP_URL || 'https://mohammadardi-portfolio.vercel.app' }}

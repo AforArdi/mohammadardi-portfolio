@@ -6,7 +6,7 @@ import nextEnv from "@next/env";
 nextEnv.loadEnvConfig(process.cwd());
 const privateValues = Object.entries(process.env).filter(([key, value]) =>
   Boolean(value && value.length >= 8) && !key.startsWith("NEXT_PUBLIC_") &&
-  (/^DATABASE_/.test(key) || /(?:SECRET|PASSWORD)$/.test(key))
+  (/^DATABASE_|^POSTGRES_/.test(key) || /(?:SECRET|PASSWORD)$/.test(key))
 );
 assert.ok(privateValues.length, "No private environment values were available for the bundle check");
 let count = 0;

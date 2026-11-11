@@ -32,3 +32,4 @@ out/
 
 # Preserve previously ignored historical notes locally
 docs/archive/
+.vercel
