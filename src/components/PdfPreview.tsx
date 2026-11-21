@@ -1,196 +1,88 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { LoaderCircle, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { PDFDocumentProxy, PDFDocumentLoadingTask } from "pdfjs-dist";
+import { LoaderCircle, AlertCircle, Minus, Plus, ScanLine } from "lucide-react";
+import { clampZoom, MIN_ZOOM, MAX_ZOOM } from "@/lib/pdf/preview-layout";
+import PdfPage from "./PdfPage";
 
 interface PdfPreviewProps {
   onPdfLoaded?: (buffer: ArrayBuffer) => void;
+  initialBuffer?: ArrayBuffer | null;
 }
 
-const MAX_PREVIEW_PAGES = 10;
-
-export default function PdfPreview({ onPdfLoaded }: PdfPreviewProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
+export default function PdfPreview({ onPdfLoaded, initialBuffer }: PdfPreviewProps) {
+  const [source] = useState(initialBuffer);
+  const [document, setDocument] = useState<PDFDocumentProxy | null>(null);
+  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
+  const [availableWidth, setAvailableWidth] = useState(800);
+  const [zoom, setZoom] = useState(1);
   const [error, setError] = useState<string | null>(null);
-  const [numPages, setNumPages] = useState<number>(0);
 
   useEffect(() => {
     let cancelled = false;
-    const abortController = new AbortController();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let activePdfDoc: any = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const activeRenderTasks: any[] = [];
-
-    async function loadPdf() {
+    const controller = new AbortController();
+    let loadingTask: PDFDocumentLoadingTask | undefined;
+    async function load() {
       try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch the PDF from our private rate-limited API with abort signal
-        const response = await fetch("/api/resume", {
-          cache: "no-store",
-          signal: abortController.signal,
-        });
-        if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error("Too many resume requests. Please try again later.");
-          }
-          if (response.status === 404) {
-            throw new Error("Resume is currently unavailable.");
-          }
-          throw new Error("Unable to load resume preview.");
+        let buffer = source;
+        if (!buffer) {
+          const response = await fetch("/api/resume", { cache: "no-store", signal: controller.signal });
+          if (!response.ok) throw new Error(response.status === 429 ? "Too many resume requests. Please try again later." : "The resume could not be loaded. Please try again later.");
+          if (!response.headers.get("content-type")?.toLowerCase().startsWith("application/pdf")) throw new Error("The server did not return a PDF.");
+          buffer = await response.arrayBuffer();
         }
-
-        const contentType = response.headers.get("content-type") || "";
-        if (!contentType.toLowerCase().startsWith("application/pdf")) {
-          throw new Error("Invalid document format received.");
-        }
-
-        const buffer = await response.arrayBuffer();
         if (cancelled) return;
-
-        // Verify PDF signature (%PDF-)
-        const header = new TextDecoder().decode(new Uint8Array(buffer.slice(0, 5)));
-        if (header !== "%PDF-") {
-          throw new Error("The document is not a valid PDF.");
-        }
-
+        if (new TextDecoder().decode(buffer.slice(0, 5)) !== "%PDF-") throw new Error("The document is not a valid PDF.");
         onPdfLoaded?.(buffer);
-
-        // Dynamically load pdfjs-dist on client
         const pdfjs = await import("pdfjs-dist");
         if (cancelled) return;
-
         pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-
-        const loadingTask = pdfjs.getDocument({
-          data: new Uint8Array(buffer.slice(0)), // Worker transfer must not detach the download cache.
-          cMapUrl: undefined,
-          cMapPacked: true,
-        });
-
-        const pdfDoc = await loadingTask.promise;
-        if (cancelled) {
-          void loadingTask.destroy();
-          return;
-        }
-
-        activePdfDoc = pdfDoc;
-        const total = pdfDoc.numPages;
-        setNumPages(total);
-
-        // Render each page to a canvas
-        const container = containerRef.current;
-        if (!container) return;
-
-        // Clear any previous canvas elements except loading indicator
-        const canvasContainer = container.querySelector(".pdf-canvas-container");
-        if (canvasContainer) {
-          canvasContainer.innerHTML = "";
-        }
-
-        const targetWidth = Math.min(container.clientWidth || 700, 800) - 32; // account for padding
-        const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
-        const pagesToRender = Math.min(total, MAX_PREVIEW_PAGES);
-
-        for (let pageNum = 1; pageNum <= pagesToRender; pageNum++) {
-          if (cancelled) break;
-
-          const page = await pdfDoc.getPage(pageNum);
-          if (cancelled) break;
-
-          const unscaledViewport = page.getViewport({ scale: 1.0 });
-          const scale = (targetWidth / unscaledViewport.width) * dpr;
-          const viewport = page.getViewport({ scale });
-
-          const canvas = document.createElement("canvas");
-          canvas.className = "w-full max-w-full h-auto rounded shadow-sm border border-border/40 bg-white";
-          canvas.width = Math.floor(viewport.width);
-          canvas.height = Math.floor(viewport.height);
-          canvas.style.maxWidth = `${Math.floor(viewport.width / dpr)}px`;
-
-          const canvasContext = canvas.getContext("2d");
-          if (!canvasContext) continue;
-
-          canvasContainer?.appendChild(canvas);
-
-          const renderTask = page.render({
-            canvas,
-            canvasContext,
-            viewport,
-          });
-          activeRenderTasks.push(renderTask);
-
-          await renderTask.promise;
-        }
-
-        if (!cancelled) {
-          setLoading(false);
-        }
-      } catch (err) {
-        if (!cancelled && (err as Error)?.name !== "AbortError") {
-          setError(err instanceof Error ? err.message : "Failed to load preview.");
-          setLoading(false);
-        }
+        loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer.slice(0)) });
+        const loaded = await loadingTask.promise;
+        if (!cancelled) setDocument(loaded);
+      } catch (error) {
+        if (!cancelled) setError(error instanceof Error ? error.message : "Unable to preview this PDF.");
       }
     }
-
-    void loadPdf();
-
+    void load();
     return () => {
       cancelled = true;
-      abortController.abort();
-      for (const task of activeRenderTasks) {
-        try {
-          task.cancel();
-        } catch {
-          // Task already completed or cancelled
-        }
-      }
-      if (activePdfDoc) {
-        try {
-          void activePdfDoc.destroy();
-        } catch {
-          // Document already destroyed
-        }
-      }
+      controller.abort();
+      void loadingTask?.destroy().catch(() => undefined);
     };
-  }, [onPdfLoaded]);
+  }, [source, onPdfLoaded]);
 
-  return (
-    <div
-      ref={containerRef}
-      tabIndex={0}
-      role="region"
-      aria-label="Resume PDF preview"
-      className="overflow-y-auto no-scrollbar max-h-[60svh] min-h-64 rounded border border-border bg-card/60 p-4 focus-visible:ring-1 focus-visible:ring-primary outline-none relative"
-    >
-      {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card/80 backdrop-blur-sm z-10 text-muted-foreground">
-          <LoaderCircle size={28} className="animate-spin text-primary" aria-hidden />
-          <p className="text-sm">Loading resume preview…</p>
-        </div>
-      )}
+  useEffect(() => {
+    if (!scrollRoot) return;
+    const measure = () => {
+      const style = getComputedStyle(scrollRoot);
+      setAvailableWidth(Math.max(160, scrollRoot.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(scrollRoot);
+    return () => observer.disconnect();
+  }, [scrollRoot]);
 
-      {error ? (
-        <div className="flex flex-col items-center justify-center h-64 gap-3 text-center p-6 text-muted-foreground">
-          <AlertCircle size={32} className="text-muted-foreground/60" aria-hidden />
-          <p className="text-sm text-foreground font-medium">{error}</p>
-          <p className="text-xs">You can still download the PDF directly using the button below.</p>
-        </div>
-      ) : (
-        <div className="pdf-canvas-container flex flex-col items-center gap-4 w-full" />
-      )}
-
-      {!loading && !error && numPages > 1 && (
-        <p className="text-center text-xs text-muted-foreground mt-2 pb-1">
-          {numPages > MAX_PREVIEW_PAGES
-            ? `Showing first ${MAX_PREVIEW_PAGES} of ${numPages} pages — scroll or download PDF for full document`
-            : `Page 1 of ${numPages} — scroll to view more`}
-        </p>
-      )}
+  const pageWidth = Math.floor(Math.min(availableWidth, 1100) * zoom);
+  const toolbarButton = "inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-md border border-border px-3 text-sm hover:bg-muted disabled:opacity-40";
+  return <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-card/50 px-3 py-2 sm:px-6">
+      <p className="text-xs text-muted-foreground" role="status">{document ? `${document.numPages} ${document.numPages === 1 ? "page" : "pages"} · Scroll to read` : "Resume preview"}</p>
+      <div role="group" aria-label="Resume zoom controls" className="flex items-center gap-2">
+        <button type="button" className={toolbarButton} disabled={!document || zoom <= MIN_ZOOM} onClick={() => setZoom(value => clampZoom(value - 0.25))} aria-label="Zoom out"><Minus size={16} /></button>
+        <output aria-live="polite" className="w-12 text-center text-xs font-mono" aria-label="Zoom relative to fit width">{Math.round(zoom * 100)}%</output>
+        <button type="button" className={toolbarButton} disabled={!document || zoom >= MAX_ZOOM} onClick={() => setZoom(value => clampZoom(value + 0.25))} aria-label="Zoom in"><Plus size={16} /></button>
+        <button type="button" className={toolbarButton} disabled={!document} onClick={() => setZoom(1)} aria-label="Fit resume to width"><ScanLine size={16} /><span>Fit width</span></button>
+      </div>
     </div>
-  );
+    <div ref={setScrollRoot} tabIndex={0} role="region" aria-label="Resume PDF preview" aria-busy={!document && !error} className="no-scrollbar relative min-h-0 flex-1 overflow-auto overscroll-contain bg-muted/20 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-6">
+      {error ? <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-3 p-6 text-center"><AlertCircle size={28} /><p>{error}</p><p className="text-sm text-muted-foreground">You can still try Download PDF above.</p></div>
+        : !document ? <div role="status" className="flex h-full min-h-48 flex-col items-center justify-center gap-3 text-muted-foreground"><LoaderCircle size={28} className="animate-spin" aria-hidden="true" /><p>Loading resume preview…</p></div>
+        : scrollRoot && <div className="pdf-canvas-container mx-auto flex flex-col gap-3" style={{ width: pageWidth }}>
+          {Array.from({ length: document.numPages }, (_, index) => <PdfPage key={index} document={document} pageNumber={index + 1} width={pageWidth} scrollRoot={scrollRoot} />)}
+        </div>}
+    </div>
+  </div>;
 }

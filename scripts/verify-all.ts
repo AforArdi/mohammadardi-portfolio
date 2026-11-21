@@ -374,11 +374,11 @@ async function main() {
       })()
     `);
 
-    // Target the specific hero resume button ("Download My CV")
+    // Target the specific hero resume button ("View My CV")
     const heroBtnPos = await cdp.evaluate<{ found: boolean; x: number; y: number; text: string }>(`
       (() => {
         const btn = Array.from(document.querySelectorAll('#home button, button')).find(
-          b => b.textContent && b.textContent.includes('Download My CV')
+          b => b.textContent && b.textContent.includes('View My CV')
         );
         if (!btn) return { found: false, x: 0, y: 0, text: '' };
         const r = btn.getBoundingClientRect();
@@ -386,14 +386,14 @@ async function main() {
       })()
     `);
     console.log("Hero CV button found:", heroBtnPos);
-    assert.equal(heroBtnPos.found, true, "Hero 'Download My CV' button must exist");
+    assert.equal(heroBtnPos.found, true, "Hero 'View My CV' button must exist");
 
     let dialogOpen = false;
     for (let attempt = 0; attempt < 10; attempt++) {
       const clickRes = await cdp.evaluate<{ clicked: boolean }>(`
         (() => {
           const btn = Array.from(document.querySelectorAll('#home button, button')).find(
-            b => b.textContent && b.textContent.includes('Download My CV')
+            b => b.textContent && b.textContent.includes('View My CV')
           );
           if (btn && typeof btn.click === 'function') {
             btn.click();
@@ -411,7 +411,7 @@ async function main() {
         }
       }
     }
-    assert.equal(dialogOpen, true, "Dialog must open after clicking Hero 'Download My CV' button");
+    assert.equal(dialogOpen, true, "Dialog must open after clicking Hero 'View My CV' button");
 
     // Wait until PDF rendering completes AND the loading overlay disappears
     console.log("Waiting until PDF canvas finishes rendering AND loading overlay disappears...");
@@ -487,7 +487,7 @@ async function main() {
             loadingText,
             hasDrawnPixels,
             hasNoScrollbar: scrollRegion ? scrollRegion.classList.contains('no-scrollbar') : false,
-            hasOverflowAuto: scrollRegion ? scrollRegion.classList.contains('overflow-y-auto') : false,
+            hasOverflowAuto: compStyle ? compStyle.overflowY === 'auto' : false,
             scrollbarWidthStyle: compStyle ? compStyle.scrollbarWidth : ''
           };
         })()
@@ -514,7 +514,7 @@ async function main() {
     assert.ok(finalStatus);
     assert.equal(finalStatus.title?.includes("Resume"), true, "Dialog title must be 'Resume / CV'");
     assert.equal(finalStatus.hasNoScrollbar, true, "Preview container must have 'no-scrollbar' class");
-    assert.equal(finalStatus.hasOverflowAuto, true, "Preview container must have 'overflow-y-auto' class");
+    assert.equal(finalStatus.hasOverflowAuto, true, "Preview container must allow scrolling");
     assert.equal(finalStatus.scrollbarWidthStyle, "none", "Computed scrollbar-width must be 'none'");
 
     // NOW that rendering is complete and overlay is gone, capture screenshot!

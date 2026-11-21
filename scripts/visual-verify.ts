@@ -274,7 +274,7 @@ async function main() {
     console.log("\n=== VERIFYING RESUME DIALOG TRIGGER & ACCESSIBILITY ===");
     const resumeCheck = await client.evaluate(`
       (() => {
-        const resumeBtn = Array.from(document.querySelectorAll('#home button')).find(b => b.textContent?.includes('Download My CV'));
+        const resumeBtn = Array.from(document.querySelectorAll('#home button')).find(b => b.textContent?.includes('View My CV'));
         if (resumeBtn) {
           resumeBtn.click();
           return { clicked: true, text: resumeBtn.textContent };

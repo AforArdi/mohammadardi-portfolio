@@ -11,7 +11,7 @@ Built by **Md Miftahul Islam Ardi**. Original site: [mohammadardi.online](https:
 | Section | Editable content |
 | --- | --- |
 | Profile | Photo, introduction, about text, availability, contact email |
-| Resume | Upload a PDF for visitors to preview in a dialog and download |
+| Resume | Upload a PDF for visitors to read in a full-screen viewer with zoom, scrolling through every page, and optional download |
 | Skills | Names, library/custom icons, glow colors, order |
 | Projects | Image, title, description, live link, optional frontend/backend GitHub links |
 | Achievements | Image, title, certificate type, description, verification link |
