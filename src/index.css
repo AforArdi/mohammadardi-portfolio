@@ -52,22 +52,22 @@
 
   :root.light {
     color-scheme: light;
-    --background: 250 36% 98%;
+    --background: 40 43% 95%;
     --foreground: 231 33% 16%;
 
-    --card: 0 0% 100%;
+    --card: 42 70% 98%;
     --card-foreground: var(--foreground);
 
-    --popover: 0 0% 100%;
+    --popover: var(--card);
     --popover-foreground: var(--foreground);
 
     --primary: 274 65% 40%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 250 28% 93%;
+    --secondary: 36 30% 89%;
     --secondary-foreground: var(--foreground);
 
-    --muted: 248 24% 92%;
+    --muted: 39 26% 91%;
     --muted-foreground: 230 15% 38%;
 
     --accent: 271 59% 93%;
@@ -79,8 +79,8 @@
     --success: 153 74% 25%;
     --warning: 32 90% 28%;
 
-    --border: 247 20% 81%;
-    --input: 246 16% 55%;
+    --border: 36 20% 77%;
+    --input: 33 12% 51%;
     --ring: var(--primary);
     --scrim: 231 33% 16% / 0.46;
 
@@ -88,7 +88,7 @@
     --glow-secondary: 260 61% 75%;
     --gradient-start: var(--primary);
     --gradient-end: 260 59% 42%;
-    --glass-bg: 0 0% 100% / 0.88;
+    --glass-bg: 42 70% 98% / 0.88;
     --glass-border: var(--border);
   }
 }
@@ -117,6 +117,10 @@
     box-shadow: 
       0 0 60px hsl(var(--glow-primary) / 0.4),
       0 0 100px hsl(var(--glow-primary) / 0.2);
+  }
+
+  .portrait-width {
+    @apply w-56 sm:w-64 xl:w-80;
   }
 
   .glow-text {
@@ -168,9 +172,14 @@
   }
 
   .social-icon {
-    @apply w-10 h-10 flex items-center justify-center rounded-lg border border-border/50 
-           text-muted-foreground hover:text-primary hover:border-primary/50 
-           transition-all duration-300 hover:shadow-[0_0_15px_hsl(var(--primary)/0.3)];
+    @apply flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/70
+           text-muted-foreground transition duration-200 hover:border-primary/50 hover:text-primary
+           focus-visible:border-primary/50 focus-visible:text-primary;
+  }
+
+  .floating-sidebar .social-icon {
+    @apply rounded-xl bg-card/90 shadow-sm backdrop-blur-sm hover:bg-card hover:shadow-md
+           motion-safe:hover:translate-x-1;
   }
 
   .btn-primary {
@@ -190,21 +199,9 @@
     @apply border-input bg-card placeholder:text-muted-foreground focus:border-primary;
   }
 
-  .floating-sidebar {
-    @apply fixed left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-50;
-  }
 }
 
 @layer utilities {
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-
   .animate-glow-pulse {
     animation: glow-pulse 3s ease-in-out infinite;
   }
@@ -234,9 +231,14 @@
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
-body { min-width: 320px; }
 section[id] { scroll-margin-top: 1rem; }
 :focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 4px; }
+.public-content #main-content:focus-visible { outline: none; }
+.public-content #main-content:focus-visible #home h1 {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 6px;
+  border-radius: var(--radius);
+}
 ::selection { background: hsl(var(--primary) / 0.3); color: hsl(var(--foreground)); }
 
 .skip-link { position: fixed; top: 1rem; left: 1rem; z-index: 100; transform: translateY(-200%); background: hsl(var(--background)); padding: 0.75rem 1rem; border: 1px solid hsl(var(--primary)); }
@@ -255,7 +257,10 @@ section[id] { scroll-margin-top: 1rem; }
 .skill-tile:hover { transform: translateY(-5px); border-color: color-mix(in srgb, var(--skill-color) 50%, transparent); box-shadow: 0 0 28px color-mix(in srgb, var(--skill-color) 15%, transparent); }
 .skill-tile:hover::before { opacity: 1; }
 .captcha-container { max-width: 100%; }
-@media (max-width: 374px) { .captcha-container { transform: scale(0.87); transform-origin: left top; } }
+@media (max-width: 374px) {
+  .captcha-container { overflow: clip; }
+  .captcha-container > div { transform: scale(0.85); transform-origin: left top; }
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }

@@ -18,7 +18,7 @@ export default function MyYtWeekSection({ videos }: { videos: PublicPortfolio["v
           {videos.map(video => (
             <Reveal
               key={video.id}
-              className="group border border-border/60 bg-card/40 backdrop-blur-sm rounded-lg overflow-hidden transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_30px_hsl(var(--primary)/0.15)] flex flex-col"
+              className="group flex flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 backdrop-blur-sm transition duration-300 hover:border-primary/50 hover:shadow-[0_0_30px_hsl(var(--primary)/0.15)] focus-within:border-primary/50"
             >
               <div className="relative aspect-video overflow-hidden bg-muted/40">
                 {video.thumbnailUrl ? (
@@ -28,7 +28,7 @@ export default function MyYtWeekSection({ videos }: { videos: PublicPortfolio["v
                     alt={video.title}
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 motion-safe:group-hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-background text-muted-foreground">
@@ -52,18 +52,18 @@ export default function MyYtWeekSection({ videos }: { videos: PublicPortfolio["v
                   </p>
                 )}
                 {video.channelTitle && (
-                  <p className="text-xs text-primary/80 font-mono mt-3">{video.channelTitle}</p>
+                  <p className="mt-3 font-mono text-xs text-primary">{video.channelTitle}</p>
                 )}
 
-                <div className="mt-6 pt-4 border-t border-border/40 flex items-center justify-between">
+                <div className="mt-6 border-t border-border/60 pt-3">
                   <a
                     href={video.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Watch ${video.title} on YouTube`}
-                    className="inline-flex items-center gap-2 text-sm font-mono text-primary hover:text-primary-foreground hover:underline transition-colors"
+                    className="-ml-2 inline-flex min-h-10 items-center gap-2 rounded-md px-2 font-mono text-sm text-primary underline-offset-4 transition-colors hover:bg-primary/10 hover:underline focus-visible:bg-primary/10 focus-visible:underline"
                   >
-                    Watch video <ExternalLink size={14} />
+                    Watch video <ExternalLink size={14} aria-hidden="true" />
                   </a>
                 </div>
               </div>

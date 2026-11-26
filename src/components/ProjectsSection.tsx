@@ -11,8 +11,8 @@ const ProjectsSection = ({ projects }: { projects: PublicPortfolio["projects"] }
   if (!projects.length) return null;
   return (
     <section id="projects" className="py-20 md:py-24 relative">
-      <div className="absolute top-20 right-10 w-32 h-32 border border-primary/10 rounded-full" />
-      <div className="absolute bottom-20 left-10 w-24 h-24 border border-primary/20 rotate-45" />
+      <div aria-hidden="true" className="pointer-events-none absolute top-20 right-10 w-32 h-32 border border-primary/10 rounded-full" />
+      <div aria-hidden="true" className="pointer-events-none absolute bottom-20 left-10 w-24 h-24 border border-primary/20 rotate-45" />
 
       <div className="container mx-auto px-6">
         <SectionHeading>projects</SectionHeading>
@@ -32,7 +32,7 @@ const ProjectsSection = ({ projects }: { projects: PublicPortfolio["projects"] }
                   fill
                   unoptimized
                   sizes="(min-width: 1440px) 496px, (min-width: 1024px) 44vw, (min-width: 768px) 720px, calc(100vw - 48px)"
-                  className="object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover object-top transition-transform duration-300 motion-safe:group-hover:scale-105"
                 />
               </div>
 

@@ -22,14 +22,34 @@ export default function HeroSection({ profile }: { profile: PublicPortfolio["pro
               <span className="text-xs sm:text-sm text-muted-foreground font-mono">{profile.availabilityText}</span>
             </div>
           </Reveal>
-          <div className="order-1 lg:order-2 flex justify-center lg:justify-center relative">
-            <div className="relative">
-              <div aria-hidden="true" className="absolute inset-2 border-2 border-primary/40 -rotate-12 -translate-x-8" />
-              <div className="relative w-56 h-56 sm:w-64 sm:h-64 xl:w-80 xl:h-80 rounded-full overflow-hidden glow-avatar animate-float">
-                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt={profile.fullName} width={640} height={640} unoptimized priority sizes="(min-width: 1280px) 320px, (min-width: 640px) 256px, 224px" className="w-full h-full object-cover scale-[1.06]" /> : <span className="w-full h-full grid place-items-center font-mono text-8xl text-primary bg-card">{profile.displayName.slice(0, 1)}</span>}
+          <div className="order-1 flex justify-center lg:order-2">
+            <figure className="portrait-width relative isolate max-w-full">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 translate-x-2.5 translate-y-2.5 rounded-[1.4rem] border border-primary/40" />
+              <div className="glow-avatar relative aspect-[4/5] overflow-hidden rounded-[1.4rem] border border-primary/25 bg-card">
+                {profile.avatarUrl ? (
+                  <Image
+                    src={profile.avatarUrl}
+                    alt={profile.fullName}
+                    fill
+                    unoptimized
+                    priority
+                    sizes="(min-width: 1280px) 320px, (min-width: 640px) 256px, 224px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span aria-hidden="true" className="grid h-full place-items-center font-mono text-8xl text-primary">{profile.displayName.slice(0, 1)}</span>
+                )}
               </div>
-              <div aria-hidden="true" className="absolute -right-4 top-1/4 w-16 h-20 dot-pattern opacity-40" />
-            </div>
+              <figcaption className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-md border border-border bg-background/95 px-2.5 py-2 font-mono text-xs shadow-sm sm:px-3">
+                <span className="min-w-0 truncate font-semibold text-foreground">{profile.displayName}</span>
+                <span aria-hidden="true" className="text-primary">·</span>
+                <span className="shrink-0 text-muted-foreground">Bangladesh</span>
+                <svg aria-hidden="true" viewBox="0 0 20 12" width="20" height="12" className="shrink-0 rounded-[2px]">
+                  <rect width="20" height="12" fill="#006A4E" />
+                  <circle cx="9" cy="6" r="4" fill="#F42A41" />
+                </svg>
+              </figcaption>
+            </figure>
           </div>
         </div>
       </div>

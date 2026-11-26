@@ -11,8 +11,8 @@ const AchievementsSection = ({ achievements }: { achievements: PublicPortfolio["
   return (
     <section id="achievements" className="py-20 md:py-24 relative">
       {/* Decorative elements */}
-      <div className="absolute top-20 left-10 w-32 h-32 border border-primary/10 rounded-full" />
-      <div className="absolute bottom-20 right-10 w-24 h-24 border border-primary/20 rotate-45" />
+      <div aria-hidden="true" className="pointer-events-none absolute top-20 left-10 w-32 h-32 border border-primary/10 rounded-full" />
+      <div aria-hidden="true" className="pointer-events-none absolute bottom-20 right-10 w-24 h-24 border border-primary/20 rotate-45" />
 
       <div className="container mx-auto px-6">
         {/* Section title */}

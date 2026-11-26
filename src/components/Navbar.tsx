@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "./ui/sheet";
 import ThemeToggle from "./ThemeToggle";
+import DhakaClock from "./DhakaClock";
 
 const defaultSections = ["home", "about", "skills", "projects", "achievements", "contact"];
 
@@ -29,14 +30,17 @@ export default function Navbar({ sections = defaultSections, displayName = "Ardi
   }, [sections]);
 
   return (
-    <header className={`public-header fixed inset-x-0 top-0 z-40 transition-all duration-300 ${scrolled ? "glass py-4" : "bg-background/90 py-6"}`}>
+    <header className={`public-header fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${scrolled ? "glass" : "border border-transparent bg-background/90"}`}>
       <nav aria-label="Main navigation" className="container mx-auto px-6 public-nav relative">
-        <div className="flex items-center justify-between lg:grid lg:grid-cols-2 lg:gap-8 w-full min-h-[2rem]">
+        <div className="flex min-h-[4.75rem] w-full items-center justify-between lg:grid lg:grid-cols-2 lg:gap-8">
           {/* Column 1: Logo (aligned with "Hi" at lg+) + Mobile hamburger button (< lg) */}
-          <div className="flex items-center justify-between lg:justify-start w-full lg:w-auto">
-            <a href="#home" aria-label={`${displayName}, home`} className="flex min-w-0 max-w-48 items-center gap-2 font-mono text-xl font-bold">
-              <span className="text-primary">&lt;</span><span className="truncate">{displayName}</span><span className="text-primary">/&gt;</span>
-            </a>
+          <div className="flex w-full min-w-0 items-center justify-between gap-3 lg:w-auto lg:justify-start">
+            <div className="flex min-w-0 flex-col items-start gap-1">
+              <a href="#home" aria-label={`${displayName}, home`} className="flex min-w-0 max-w-full items-center gap-2 font-mono text-xl font-bold transition-colors hover:text-primary lg:max-w-40 xl:max-w-48">
+                <span className="text-primary">&lt;</span><span className="truncate">{displayName}</span><span className="text-primary">/&gt;</span>
+              </a>
+              <DhakaClock />
+            </div>
             <div className="flex items-center gap-1 lg:hidden">
               <ThemeToggle />
               <Sheet open={open} onOpenChange={setOpen}>
@@ -64,8 +68,8 @@ export default function Navbar({ sections = defaultSections, displayName = "Ardi
 
           {/* Column 2 (lg+): Shared layout constraints with HeroSection to align nav right edge with portrait avatar */}
           <div className="hidden lg:flex justify-center relative">
-            <div className="relative w-56 sm:w-64 xl:w-80 flex justify-end">
-              <ul className="desktop-nav-links flex items-center gap-6 whitespace-nowrap absolute right-0 top-1/2 -translate-y-1/2">
+            <div className="portrait-width relative flex justify-end">
+              <ul className="desktop-nav-links absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-5 whitespace-nowrap xl:gap-6">
                 {sections.map(id => (
                   <li key={id}>
                     <a href={`#${id}`} aria-current={active === id ? "location" : undefined} className={`nav-link font-mono text-sm whitespace-nowrap ${active === id ? "active" : ""}`}>

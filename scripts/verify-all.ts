@@ -237,7 +237,7 @@ async function main() {
           const lastNavLi = navUl ? navUl.lastElementChild : null;
           const hi = document.querySelector('#home h1');
           const avatar = document.querySelector('.glow-avatar') || document.querySelector('#home img');
-          const socialRail = document.querySelector('aside.fixed.left-6') || document.querySelector('aside');
+          const socialRail = document.querySelector('nav.floating-sidebar');
 
           const logoRect = logo ? logo.getBoundingClientRect() : { left: 0 };
           const hiRect = hi ? hi.getBoundingClientRect() : { left: 0 };
@@ -274,7 +274,7 @@ async function main() {
       console.log(`Social rail: position=${metrics.socialRailPosition}, left=${metrics.socialRailLeft}px`);
 
       assert.equal(metrics.logoDiff <= 1, true, `Logo left must align with Hi left at ${w}px`);
-      assert.equal(metrics.navRightDiff <= 2, true, `Nav right edge must align with circular avatar right edge at ${w}px`);
+      assert.equal(metrics.navRightDiff <= 2, true, `Nav right edge must align with the portrait frame at ${w}px`);
       assert.equal(metrics.navItemCount, 7, `Must have 7 navigation items at ${w}px`);
       assert.equal(metrics.isNowrap, true, `Navigation must not wrap at ${w}px`);
 

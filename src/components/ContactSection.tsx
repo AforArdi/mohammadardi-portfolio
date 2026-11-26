@@ -80,7 +80,7 @@ export default function ContactSection({
     <section id="contact" className="py-20 md:py-24 relative">
       <div className="container mx-auto px-6">
         <SectionHeading>contact</SectionHeading>
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
           <div>
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
               I&apos;m interested in freelance opportunities and exciting projects. However, if you have other
@@ -93,8 +93,8 @@ export default function ContactSection({
                   href={`mailto:${contactEmail}`}
                   className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  <Mail size={18} aria-hidden="true" />
-                  Get in touch ({contactEmail})
+                  <Mail size={18} className="shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 [overflow-wrap:anywhere]">Get in touch ({contactEmail})</span>
                 </a>
                 {linkedinUrl && (
                   <a

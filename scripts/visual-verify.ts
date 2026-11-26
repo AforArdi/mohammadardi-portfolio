@@ -181,7 +181,7 @@ async function main() {
           const portraitImg = document.querySelector('#home img') || document.querySelector('section:first-of-type img');
           const portraitStyle = portraitImg ? window.getComputedStyle(portraitImg).transform : null;
 
-          const socialRail = document.querySelector('aside') || document.querySelector('[aria-label="Social rail"]') || document.querySelector('.fixed.left-6');
+          const socialRail = document.querySelector('nav.floating-sidebar');
           const socialRect = socialRail ? socialRail.getBoundingClientRect() : null;
           const socialStyle = socialRail ? window.getComputedStyle(socialRail).position : null;
 
