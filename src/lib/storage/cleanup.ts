@@ -26,7 +26,8 @@ export async function drainCleanup(limit = 5, customDb?: any, customStorage?: an
           const rawRefs = await tx.execute(sql`SELECT 1 FROM portfolio.profile WHERE avatar_media_id = ${assetId}::uuid OR resume_media_id = ${assetId}::uuid
             UNION ALL SELECT 1 FROM portfolio.projects WHERE image_media_id = ${assetId}::uuid
             UNION ALL SELECT 1 FROM portfolio.achievements WHERE image_media_id = ${assetId}::uuid
-            UNION ALL SELECT 1 FROM portfolio.skills WHERE custom_media_id = ${assetId}::uuid LIMIT 1`);
+            UNION ALL SELECT 1 FROM portfolio.skills WHERE custom_media_id = ${assetId}::uuid
+            UNION ALL SELECT 1 FROM portfolio.social_links WHERE custom_media_id = ${assetId}::uuid LIMIT 1`);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const refs: any[] = Array.isArray(rawRefs) ? rawRefs : (rawRefs as any).rows ?? [];
           if (refs.length) { await tx.execute(sql`UPDATE portfolio.storage_cleanup_queue SET completed_at = now(), locked_until = NULL WHERE id = ${job.id}::uuid`); return; }
@@ -60,6 +61,7 @@ export async function reconcileCleanup(customDb?: any) {
       AND NOT EXISTS (SELECT 1 FROM portfolio.projects p WHERE p.image_media_id=m.id)
       AND NOT EXISTS (SELECT 1 FROM portfolio.achievements a WHERE a.image_media_id=m.id)
       AND NOT EXISTS (SELECT 1 FROM portfolio.skills s WHERE s.custom_media_id=m.id)
+      AND NOT EXISTS (SELECT 1 FROM portfolio.social_links s WHERE s.custom_media_id=m.id)
       AND NOT EXISTS (SELECT 1 FROM portfolio.storage_cleanup_queue q WHERE q.bucket_name=m.bucket_name AND q.storage_path=m.storage_path AND q.completed_at IS NULL) LIMIT 100`);
   await db.execute(sql`DELETE FROM portfolio.rate_limit_buckets WHERE expires_at < now() - interval '1 day'`);
   await db.execute(sql`DELETE FROM portfolio.fresh_login_nonces WHERE expires_at < now() - interval '1 day'`);

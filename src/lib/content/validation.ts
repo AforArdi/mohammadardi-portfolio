@@ -26,7 +26,15 @@ export const skillInput = z.object({
 });
 export const projectInput = z.object({ title: name, description, imageMediaId: uuid, liveUrl: httpsUrl, githubUrl: optionalUrl, githubServerUrl: optionalUrl, ...editorial }).strict();
 export const achievementInput = z.object({ title: name, certificateType: name, description, imageMediaId: uuid, verifyUrl: httpsUrl, ...editorial }).strict();
-export const socialInput = z.object({ platform: name, label: name, url: httpsUrl, iconKey: z.string().min(1).max(100), ...editorial }).strict();
+export const socialInput = z.object({
+  platform: name, label: name, url: httpsUrl,
+  iconKey: z.string().trim().min(1).max(100).nullable(),
+  customMediaId: uuid.nullable().default(null), ...editorial,
+}).strict().superRefine((value, ctx) => {
+  if ((value.iconKey === null) === (value.customMediaId === null)) {
+    ctx.addIssue({ code: "custom", message: "Choose one library icon or upload one custom icon." });
+  }
+});
 export const videoInput = z.object({
   url: z.string().trim().min(1).max(2000),
   titleOverride: z.string().trim().max(300).nullable().optional().transform(v => v ? v.trim() : null),

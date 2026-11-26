@@ -63,8 +63,13 @@ export const achievements = portfolio.table("achievements", {
 }, t => ({ published: index("achievements_published_order").on(t.displayOrder, t.id).where(sql`${t.isPublished} = true AND ${t.deletedAt} IS NULL`) }));
 
 export const socialLinks = portfolio.table("social_links", {
-  id: uuid("id").primaryKey().defaultRandom(), platform: text("platform").notNull(), label: text("label").notNull(), url: text("url").notNull(), iconKey: text("icon_key").notNull(), ...editorial(),
-}, t => ({ published: index("socials_published_order").on(t.displayOrder, t.id).where(sql`${t.isPublished} = true AND ${t.deletedAt} IS NULL`) }));
+  id: uuid("id").primaryKey().defaultRandom(), platform: text("platform").notNull(), label: text("label").notNull(), url: text("url").notNull(),
+  iconKey: text("icon_key"),
+  customMediaId: uuid("custom_media_id").references(() => mediaAssets.id, { onDelete: "restrict" }), ...editorial(),
+}, t => ({
+  icon: check("social_icon_exclusivity", sql`(${t.iconKey} IS NOT NULL AND ${t.customMediaId} IS NULL) OR (${t.iconKey} IS NULL AND ${t.customMediaId} IS NOT NULL)`),
+  published: index("socials_published_order").on(t.displayOrder, t.id).where(sql`${t.isPublished} = true AND ${t.deletedAt} IS NULL`),
+}));
 
 export const youtubeVideos = portfolio.table("youtube_videos", {
   id: uuid("id").primaryKey().defaultRandom(),

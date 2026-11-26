@@ -10,7 +10,7 @@ import Reveal from "@/components/Reveal";
 
 export default async function HomePage() {
   const data = await getPublicPortfolio();
-  const linkedin = data.socials.find(social => social.iconKey === "lucide:linkedin")?.href;
+  const linkedin = data.socials.find(social => social.platform.trim().toLowerCase() === "linkedin" || social.iconKey === "lucide:linkedin")?.href;
   return (
     <main id="main-content" tabIndex={-1}>
       <HeroSection profile={data.profile} />

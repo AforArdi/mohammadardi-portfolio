@@ -23,7 +23,7 @@ async function setupDatabase() {
   await client.exec(
     "CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE portfolio_app; CREATE ROLE portfolio_migrator; CREATE SCHEMA portfolio; CREATE TABLE portfolio.__drizzle_migrations(id serial PRIMARY KEY, hash text, created_at bigint);"
   );
-  for (const file of ["0000_portfolio_schema", "0001_private_schema_permissions", "0002_youtube_videos", "0003_tough_weapon_omega"]) {
+  for (const file of ["0000_portfolio_schema", "0001_private_schema_permissions", "0002_youtube_videos", "0003_tough_weapon_omega", "0004_social_custom_icons"]) {
     await client.exec(await readFile(`src/db/migrations/${file}.sql`, "utf8"));
   }
   return { client, db };

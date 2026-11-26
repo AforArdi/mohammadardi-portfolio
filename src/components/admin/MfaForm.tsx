@@ -20,6 +20,6 @@ export default function MfaForm({ factors }: { factors: { id: string; name: stri
       <div><label htmlFor="totp-code" className="block mb-2 text-sm">Six-digit code</label><input id="totp-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required className="input-field text-center font-mono text-2xl tracking-[0.4em]" /></div>
       <button disabled={pending} className="btn-primary w-full disabled:opacity-50">{pending ? "Verifying…" : "Unlock dashboard"}</button>
     </form>}
-    <p role="status" className="text-red-300 text-sm">{state.error || enrollment.error}</p>
+    <p role="status" className="text-danger text-sm">{state.error || enrollment.error}</p>
   </div>;
 }

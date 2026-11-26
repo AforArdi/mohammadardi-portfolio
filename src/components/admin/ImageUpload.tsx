@@ -144,7 +144,7 @@ export default function ImageUpload({
         {busy ? "Uploading…" : value ? "Replace file" : "Upload file"}
       </button>
       <p className="text-xs text-muted-foreground">{helperText}</p>
-      {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

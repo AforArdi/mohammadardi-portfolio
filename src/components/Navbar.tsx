@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "./ui/sheet";
+import ThemeToggle from "./ThemeToggle";
 
 const defaultSections = ["home", "about", "skills", "projects", "achievements", "contact"];
 
@@ -36,26 +37,29 @@ export default function Navbar({ sections = defaultSections, displayName = "Ardi
             <a href="#home" aria-label={`${displayName}, home`} className="flex min-w-0 max-w-48 items-center gap-2 font-mono text-xl font-bold">
               <span className="text-primary">&lt;</span><span className="truncate">{displayName}</span><span className="text-primary">/&gt;</span>
             </a>
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <button type="button" className="lg:hidden p-2" aria-label="Open navigation">
-                  <Menu size={24} />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[min(85vw,360px)]">
-                <SheetTitle className="font-mono text-primary">Navigation</SheetTitle>
-                <SheetDescription className="sr-only">Jump to a section of Ardi’s portfolio.</SheetDescription>
-                <nav aria-label="Mobile navigation" className="mt-10 flex flex-col gap-3">
-                  {sections.map(id => (
-                    <SheetClose key={id} asChild>
-                      <a href={`#${id}`} aria-current={active === id ? "location" : undefined} className={`nav-link py-3 px-2 font-mono ${active === id ? "active" : ""}`}>
-                        {id}
-                      </a>
-                    </SheetClose>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
+            <div className="flex items-center gap-1 lg:hidden">
+              <ThemeToggle />
+              <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                  <button type="button" className="inline-flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/10 hover:text-primary" aria-label="Open navigation">
+                    <Menu size={24} aria-hidden="true" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[min(85vw,360px)]">
+                  <SheetTitle className="font-mono text-primary">Navigation</SheetTitle>
+                  <SheetDescription className="sr-only">Jump to a section of the portfolio.</SheetDescription>
+                  <nav aria-label="Mobile navigation" className="mt-10 flex flex-col gap-3">
+                    {sections.map(id => (
+                      <SheetClose key={id} asChild>
+                        <a href={`#${id}`} aria-current={active === id ? "location" : undefined} className={`nav-link py-3 px-2 font-mono ${active === id ? "active" : ""}`}>
+                          {id}
+                        </a>
+                      </SheetClose>
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
 
           {/* Column 2 (lg+): Shared layout constraints with HeroSection to align nav right edge with portrait avatar */}
@@ -70,6 +74,9 @@ export default function Navbar({ sections = defaultSections, displayName = "Ardi
                   </li>
                 ))}
               </ul>
+              <div className="absolute left-full top-1/2 ml-3 -translate-y-1/2">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>

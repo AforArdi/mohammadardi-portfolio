@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { achievements, mediaAssets, profile, projects, skills, socialLinks, storageCleanupQueue, youtubeVideos } from "@/db/schema";
 import { HttpError } from "@/lib/api";
 import { storageClient } from "@/lib/storage/client";
+import { PURPOSE_BUDGETS } from "@/lib/storage/images";
 import { iconRegistry } from "./icons";
 import { achievementInput, mutationInput, profileInput, projectInput, skillInput, socialInput, videoInput } from "./validation";
 import { fetchYouTubeMetadata, parseYouTubeUrl } from "@/lib/youtube/service";
@@ -21,11 +22,14 @@ function changed<T>(rows: T[]) {
 export function invalidatePortfolio() { revalidateTag("portfolio-content", { expire: 0 }); revalidatePath("/"); }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function checkMedia(id: string | null, kind: "image" | "pdf", publish: boolean, customDb?: any, customStorage?: any) {
+async function checkMedia(id: string | null, kind: "image" | "icon" | "pdf", publish: boolean, customDb?: any, customStorage?: any) {
   if (!id) return;
   const db = customDb ?? getDb();
   const [asset] = await db.select().from(mediaAssets).where(eq(mediaAssets.id, id));
   if (!asset || (kind === "pdf" ? asset.mimeType !== "application/pdf" : asset.mimeType !== "image/webp")) throw new HttpError(400, "Choose a valid uploaded file.");
+  if (kind === "icon" && (!asset.width || !asset.height || Math.max(asset.width, asset.height) > PURPOSE_BUDGETS.icon.maxDimension || asset.fileSizeBytes > PURPOSE_BUDGETS.icon.maxBytes)) {
+    throw new HttpError(400, "Upload this image using the custom icon control so it fits the 256px / 40 KB icon budget.");
+  }
   if (publish && asset.bucketName === "private-staging") {
     // Both object locations are queued before the copy. Reference checks protect active assets.
     await db.insert(storageCleanupQueue).values({ bucketName: "public-media", storagePath: asset.storagePath, nextRetryAt: new Date(Date.now() + 86_400_000) });
@@ -56,7 +60,7 @@ export async function saveContent(collection: string, input: unknown, customDb?:
   if (collection === "skills") {
     const value = skillInput.parse(data);
     if (value.iconProvider !== "custom") checkIcon(value.iconKey, value.iconProvider);
-    await checkMedia(value.customMediaId, "image", value.isPublished, db, customStorage);
+    await checkMedia(value.customMediaId, "icon", value.isPublished, db, customStorage);
     return id ? changed(await db.update(skills).set({ ...value, version: sql`${skills.version} + 1`, updatedAt: new Date() }).where(and(eq(skills.id, id), eq(skills.version, expectedVersion!), isNull(skills.deletedAt))).returning()) : changed(await db.insert(skills).values(value).returning());
   }
   if (collection === "projects") {
@@ -71,7 +75,8 @@ export async function saveContent(collection: string, input: unknown, customDb?:
   }
   if (collection === "socials") {
     const value = socialInput.parse(data);
-    checkIcon(value.iconKey);
+    if (value.iconKey !== null) checkIcon(value.iconKey);
+    await checkMedia(value.customMediaId, "icon", value.isPublished, db, customStorage);
     return id ? changed(await db.update(socialLinks).set({ ...value, version: sql`${socialLinks.version} + 1`, updatedAt: new Date() }).where(and(eq(socialLinks.id, id), eq(socialLinks.version, expectedVersion!), isNull(socialLinks.deletedAt))).returning()) : changed(await db.insert(socialLinks).values(value).returning());
   }
   if (collection === "videos") {

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, LoaderCircle, Check, Eye, EyeOff, RefreshCw, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ImageUpload from "./ImageUpload";
-import IconPicker from "./IconPicker";
+import IconField from "./IconField";
 
 type Section = "profile" | "skills" | "projects" | "achievements" | "socials" | "videos";
 type RecordData = Record<string, unknown> & { id?: string | number; version?: number };
@@ -31,7 +31,7 @@ function blank(section: Section, order: number): RecordData {
   const record: RecordData = Object.fromEntries(fields[section].map(field => [field.key, ""]));
   if (section !== "profile") Object.assign(record, { displayOrder: order, isPublished: false });
   if (section === "skills") Object.assign(record, { iconProvider: "lucide", iconKey: "lucide:code", customMediaId: null, accentColor: "#C084FC" });
-  if (section === "socials") record.iconKey = "lucide:globe";
+  if (section === "socials") Object.assign(record, { iconKey: "lucide:globe", customMediaId: null });
   if (section === "projects" || section === "achievements") record.imageMediaId = null;
   if (section === "videos") Object.assign(record, { fetchedTitle: null, channelTitle: null, thumbnailUrl: null, videoId: null });
   return record;
@@ -109,7 +109,7 @@ export default function ContentStudio() {
       if (section === "profile") Object.assign(data, { avatarMediaId: editing.avatarMediaId || null, resumeMediaId: editing.resumeMediaId || null });
       if (section === "projects" || section === "achievements") data.imageMediaId = editing.imageMediaId;
       if (section === "skills") Object.assign(data, { iconProvider: editing.iconProvider, iconKey: editing.iconKey, customMediaId: editing.customMediaId || null, accentColor: editing.accentColor });
-      if (section === "socials") data.iconKey = editing.iconKey;
+      if (section === "socials") Object.assign(data, { iconKey: editing.iconKey, customMediaId: editing.customMediaId || null });
       if (section === "videos") {
         Object.assign(data, {
           url: editing.url,
@@ -185,9 +185,9 @@ export default function ContentStudio() {
         )}
       </div>
 
-      {notice && <p role="status" className="mb-5 rounded-lg border border-green-400/20 bg-green-400/5 text-green-200 text-sm p-4 flex items-center gap-2"><Check size={16} />{notice}</p>}
-      {error && <p role="alert" className="mb-5 rounded-lg border border-red-400/20 bg-red-400/5 text-red-200 text-sm p-4">{error}</p>}
-      {metaWarning && <p role="alert" className="mb-5 rounded-lg border border-yellow-400/20 bg-yellow-400/10 text-yellow-200 text-sm p-4">{metaWarning}</p>}
+      {notice && <p role="status" className="mb-5 rounded-lg border border-success/20 bg-success/5 text-success text-sm p-4 flex items-center gap-2"><Check size={16} />{notice}</p>}
+      {error && <p role="alert" className="mb-5 rounded-lg border border-danger/20 bg-danger/5 text-danger text-sm p-4">{error}</p>}
+      {metaWarning && <p role="alert" className="mb-5 rounded-lg border border-warning/20 bg-warning/10 text-warning text-sm p-4">{metaWarning}</p>}
 
       {loading ? (
         <p className="flex items-center gap-2 text-muted-foreground py-12"><LoaderCircle className="animate-spin" size={20} />Loading…</p>
@@ -298,11 +298,18 @@ export default function ContentStudio() {
             </div>
           )}
           {(section === "skills" || section === "socials") && (
-            <IconPicker allowBrand={section === "socials"} value={editing.iconKey as string || null} onChange={key => setEditing(record => ({ ...record, iconKey: key, ...(section === "skills" ? { iconProvider: key.startsWith("lucide:") ? "lucide" : "simple-icons", customMediaId: null } : {}) }))} />
+            <IconField
+              kind={section === "skills" ? "skill" : "social"}
+              value={{ iconKey: editing.iconKey as string || null, customMediaId: editing.customMediaId as string || null }}
+              disabled={saving || uploading} onBusy={setUploading}
+              onChange={selection => setEditing(record => record ? {
+                ...record, ...selection,
+                ...(section === "skills" ? { iconProvider: selection.customMediaId ? "custom" : selection.iconKey?.startsWith("lucide:") ? "lucide" : "simple-icons" } : {}),
+              } : record)}
+            />
           )}
           {section === "skills" && (
             <div className="grid sm:grid-cols-2 gap-8">
-              <ImageUpload label="Custom skill icon" purpose="icon" value={editing.customMediaId as string || null} disabled={saving || uploading} onBusy={setUploading} onChange={value => setEditing(record => ({ ...record, customMediaId: value, iconProvider: value ? "custom" : "lucide", iconKey: value ? null : "lucide:code" }))} />
               <div>
                 <label htmlFor="accent-color" className="block text-sm mb-3">Glow color</label>
                 <div className="flex gap-3 items-center">
@@ -326,7 +333,7 @@ export default function ContentStudio() {
                 <p className="text-xs text-muted-foreground mt-2">Lower numbers appear first.</p>
               </div>
               <label className="flex items-center gap-3 text-sm">
-                <input type="checkbox" checked={Boolean(editing.isPublished)} onChange={event => change("isPublished", event.target.checked)} className="w-4 h-4 accent-purple-400" />
+                <input type="checkbox" checked={Boolean(editing.isPublished)} onChange={event => change("isPublished", event.target.checked)} className="w-4 h-4 accent-primary" />
                 Published on portfolio
               </label>
             </div>
@@ -363,7 +370,7 @@ export default function ContentStudio() {
                 <button type="button" aria-label={`Edit ${getItemTitle(item)}`} className="p-2.5 border border-border rounded-md hover:border-primary" onClick={() => { setEditing(item); setNotice(""); setMetaWarning(""); }}>
                   <Pencil size={16} />
                 </button>
-                <button type="button" aria-label={`Delete ${getItemTitle(item)}`} className="p-2.5 border border-border rounded-md text-red-300 hover:border-red-300" onClick={() => setDeleting(item)}>
+                <button type="button" aria-label={`Delete ${getItemTitle(item)}`} className="p-2.5 border border-border rounded-md text-danger hover:border-danger" onClick={() => setDeleting(item)}>
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -386,7 +393,7 @@ export default function ContentStudio() {
         </DialogHeader>
         <div className="flex justify-end gap-4 mt-4">
           <button disabled={saving} onClick={() => setDeleting(null)} className="text-sm">Cancel</button>
-          <button disabled={saving} onClick={() => void remove()} className="px-4 py-2 rounded-md bg-red-500/15 border border-red-400/40 text-red-200 text-sm">
+          <button disabled={saving} onClick={() => void remove()} className="px-4 py-2 rounded-md bg-danger/10 border border-danger/40 text-danger text-sm">
             {saving ? "Deleting…" : "Delete item"}
           </button>
         </div>

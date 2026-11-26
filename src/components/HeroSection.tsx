@@ -18,7 +18,7 @@ export default function HeroSection({ profile }: { profile: PublicPortfolio["pro
               {profile.hasResume && <ResumeDialog />}
             </div>
             <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 border border-border/50 rounded-lg">
-              <span className="w-2 h-2 shrink-0 rounded-full bg-green-500" aria-hidden="true" />
+              <span className="w-2 h-2 shrink-0 rounded-full bg-success dark:bg-green-500" aria-hidden="true" />
               <span className="text-xs sm:text-sm text-muted-foreground font-mono">{profile.availabilityText}</span>
             </div>
           </Reveal>

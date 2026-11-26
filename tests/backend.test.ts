@@ -252,6 +252,7 @@ test("Postgres migrations enforce private roles, atomic MFA consumption, fixed d
     await client.exec(await readFile("src/db/migrations/0001_private_schema_permissions.sql", "utf8"));
     await client.exec(await readFile("src/db/migrations/0002_youtube_videos.sql", "utf8"));
     await client.exec(await readFile("src/db/migrations/0003_tough_weapon_omega.sql", "utf8"));
+    await client.exec(await readFile("src/db/migrations/0004_social_custom_icons.sql", "utf8"));
 
     // Verify role boundary on profile and youtube_videos
     await client.exec("SET ROLE anon");

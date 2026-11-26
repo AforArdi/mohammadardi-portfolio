@@ -2,6 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
 import type ReCAPTCHAInstance from "react-google-recaptcha";
 import emailjs from "@emailjs/browser";
 import { Send, Mail, Linkedin, LoaderCircle, Info } from "lucide-react";
@@ -31,7 +32,10 @@ export default function ContactSection({
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const captchaRef = useRef<ReCAPTCHAInstance>(null);
-  const [captcha, setCaptcha] = useState<string | null>(null);
+  const { resolvedTheme } = useTheme();
+  const [verifiedCaptchaTheme, setVerifiedCaptchaTheme] = useState<"light" | "dark" | null>(null);
+  // Keep the rendered widget mounted while its response is valid for submission.
+  const captchaTheme = verifiedCaptchaTheme ?? (resolvedTheme === "light" ? "light" : "dark");
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<{ error: boolean; text: string } | null>(null);
 
@@ -45,7 +49,7 @@ export default function ContactSection({
       return;
     }
     if (sending || !formRef.current) return;
-    if (!captcha) {
+    if (!verifiedCaptchaTheme) {
       setStatus({ error: true, text: "Please complete the verification before sending." });
       return;
     }
@@ -67,7 +71,7 @@ export default function ContactSection({
       });
     } finally {
       setSending(false);
-      setCaptcha(null);
+      setVerifiedCaptchaTheme(null);
       captchaRef.current?.reset();
     }
   }
@@ -173,13 +177,14 @@ export default function ContactSection({
               {isContactConfigured && (
                 <div className="captcha-container min-h-[78px]">
                   <ReCAPTCHA
+                    key={captchaTheme}
                     instanceRef={captchaRef}
                     sitekey={RECAPTCHA_SITE_KEY}
-                    theme="dark"
-                    onChange={setCaptcha}
-                    onExpired={() => setCaptcha(null)}
+                    theme={captchaTheme}
+                    onChange={token => setVerifiedCaptchaTheme(token ? captchaTheme : null)}
+                    onExpired={() => setVerifiedCaptchaTheme(null)}
                     onErrored={() => {
-                      setCaptcha(null);
+                      setVerifiedCaptchaTheme(null);
                       setStatus({
                         error: true,
                         text: "Verification could not load. If testing on localhost, add localhost to your Google reCAPTCHA allowed domains, or use the email link.",
@@ -190,7 +195,7 @@ export default function ContactSection({
               )}
 
               <div role="status" aria-live="polite" className="text-sm leading-relaxed">
-                {status && <p className={status.error ? "text-red-300" : "text-green-300"}>{status.text}</p>}
+                {status && <p className={status.error ? "text-danger" : "text-success"}>{status.text}</p>}
               </div>
 
               <button

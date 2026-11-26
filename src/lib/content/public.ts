@@ -26,7 +26,7 @@ export const getPublicPortfolio = unstable_cache(async () => {
     db.select({ id: skills.id, name: skills.name, iconKey: skills.iconKey, customMediaId: skills.customMediaId, color: skills.accentColor }).from(skills).where(and(eq(skills.isPublished, true), isNull(skills.deletedAt))).orderBy(asc(skills.displayOrder), asc(skills.id)),
     db.select({ id: projects.id, name: projects.title, about: projects.description, github: projects.githubUrl, githubServer: projects.githubServerUrl, live: projects.liveUrl }).from(projects).where(and(eq(projects.isPublished, true), isNull(projects.deletedAt))).orderBy(asc(projects.displayOrder), asc(projects.id)),
     db.select({ id: achievements.id, title: achievements.title, subtitle: achievements.certificateType, description: achievements.description, verifyUrl: achievements.verifyUrl }).from(achievements).where(and(eq(achievements.isPublished, true), isNull(achievements.deletedAt))).orderBy(asc(achievements.displayOrder), asc(achievements.id)),
-    db.select({ id: socialLinks.id, href: socialLinks.url, label: socialLinks.label, iconKey: socialLinks.iconKey }).from(socialLinks).where(and(eq(socialLinks.isPublished, true), isNull(socialLinks.deletedAt))).orderBy(asc(socialLinks.displayOrder), asc(socialLinks.id)),
+    db.select({ id: socialLinks.id, platform: socialLinks.platform, href: socialLinks.url, label: socialLinks.label, iconKey: socialLinks.iconKey, customMediaId: socialLinks.customMediaId }).from(socialLinks).where(and(eq(socialLinks.isPublished, true), isNull(socialLinks.deletedAt))).orderBy(asc(socialLinks.displayOrder), asc(socialLinks.id)),
     db.select({
       id: youtubeVideos.id,
       url: youtubeVideos.url,
@@ -45,7 +45,7 @@ export const getPublicPortfolio = unstable_cache(async () => {
     skills: skillRows.map(({ customMediaId, ...skill }) => ({ ...skill, customIconUrl: customMediaId ? `/api/media/skill/${skill.id}` : null })),
     projects: projectRows.map(project => ({ ...project, image: `/api/media/project/${project.id}` })),
     achievements: achievementRows.map(achievement => ({ ...achievement, imageUrl: `/api/media/achievement/${achievement.id}` })),
-    socials,
+    socials: socials.map(({ customMediaId, ...social }) => ({ ...social, customIconUrl: customMediaId ? `/api/media/social/${social.id}` : null })),
     videos: videoRows.map(video => ({
       id: video.id,
       url: video.url,
@@ -56,6 +56,6 @@ export const getPublicPortfolio = unstable_cache(async () => {
       channelTitle: video.channelTitle,
     })),
   };
-}, ["public-portfolio-v2"], { tags: ["portfolio-content"], revalidate: 3600 });
+}, ["public-portfolio-v3"], { tags: ["portfolio-content"], revalidate: 3600 });
 
 export type PublicPortfolio = Awaited<ReturnType<typeof getPublicPortfolio>>;

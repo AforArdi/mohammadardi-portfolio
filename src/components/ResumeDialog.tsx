@@ -91,7 +91,7 @@ export default function ResumeDialog() {
         </div>
         </header>
         {error && (
-          <p role="alert" className="shrink-0 border-b border-border px-4 py-2 text-sm text-red-300">
+          <p role="alert" className="shrink-0 border-b border-border px-4 py-2 text-sm text-danger">
             {error}
           </p>
         )}

@@ -1,0 +1,4 @@
+ALTER TABLE "portfolio"."social_links" ALTER COLUMN "icon_key" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "portfolio"."social_links" ADD COLUMN "custom_media_id" uuid;--> statement-breakpoint
+ALTER TABLE "portfolio"."social_links" ADD CONSTRAINT "social_links_custom_media_id_media_assets_id_fk" FOREIGN KEY ("custom_media_id") REFERENCES "portfolio"."media_assets"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "portfolio"."social_links" ADD CONSTRAINT "social_icon_exclusivity" CHECK (("portfolio"."social_links"."icon_key" IS NOT NULL AND "portfolio"."social_links"."custom_media_id" IS NULL) OR ("portfolio"."social_links"."icon_key" IS NULL AND "portfolio"."social_links"."custom_media_id" IS NOT NULL));

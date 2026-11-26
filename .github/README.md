@@ -15,7 +15,7 @@ Built by **Md Miftahul Islam Ardi**. Original site: [mohammadardi.online](https:
 | Skills | Names, library/custom icons, glow colors, order |
 | Projects | Image, title, description, live link, optional frontend/backend GitHub links |
 | Achievements | Image, title, certificate type, description, verification link |
-| Social links | Profiles shown across the website |
+| Social links | Profiles, searchable library/custom icons, order, and publishing across the sidebar and footer |
 | My YT Week | YouTube link, automatically fetched title/thumbnail, your description, optional title override |
 
 Collections support drafts, publishing, ordering, and deletion. YouTube selections stay visible until you change them; they do not expire automatically each week.
@@ -34,6 +34,14 @@ This is **one Next.js app**, including the public website, admin dashboard, and 
 - **Simple Icons + Lucide:** locally bundled icons; custom image icons are also supported.
 
 No separate backend project or Neon database is needed. Supabase Free is the intended starting point; traffic, storage, and provider terms still determine whether your usage fits free allowances.
+
+### Choosing icons
+
+In **Skills** or **Social links**, search by name (for example, WhatsApp, Telegram, or React), then select an icon. Search also recognizes common aliases such as Twitter, Next.js, and Node.js. This is a small bundled catalog, not a third-party icon API, so library selections use no Supabase file storage.
+
+If a brand is missing, use **Custom social icon** or **Custom skill icon** below the picker. Upload a transparent PNG or WebP for the best result on the dark theme; JPEG is also accepted. The existing upload pipeline converts it to WebP, keeps transparency, and limits it to 256px and 40 KB. Selecting a library icon replaces the custom selection; removing a custom icon restores a default library icon. Skill glow effects and social hover effects stay in place.
+
+For WhatsApp, use an HTTPS link such as `https://wa.me/YOUR_NUMBER`; for Telegram, use `https://t.me/YOUR_USERNAME`. Set **Published on portfolio** when ready. Draft icons stay private, and custom social icons appear consistently in both the sidebar and footer. See the [social icon update notes](../docs/reviews/SOCIAL_ICON_UPDATE.md) for migration and verification details.
 
 ## Set up your own copy
 
@@ -101,7 +109,7 @@ Upload your actual PDF under **Profile & CV** to enable the resume button. Use *
 
 ## Change the theme
 
-Themes are customized in code; there is currently **no dashboard theme switcher**.
+Visitors can switch between dark and light in the portfolio header. Dark is the default, and the browser remembers the selected mode. The same palette applies to the admin pages and dialogs.
 
 Start with the CSS variables in `src/index.css`. For example, to try a blue accent:
 
@@ -113,7 +121,7 @@ Start with the CSS variables in `src/index.css`. For example, to try a blue acce
 --gradient-start: 205 90% 65%;
 ```
 
-These are HSL values without an `hsl()` wrapper. Adjust the secondary glow/gradient tokens too. If changing backgrounds/text, check both `:root` and `.dark`; the root layout currently applies the dark class. Recheck text contrast and keyboard focus visibility.
+These are HSL values without an `hsl()` wrapper. `:root` defines the dark palette and `:root.light` defines the light palette. Check text contrast and keyboard focus in both modes when customizing the colors.
 
 | Change | File |
 | --- | --- |

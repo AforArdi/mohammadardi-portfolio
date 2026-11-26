@@ -51,7 +51,7 @@ test("durable password gate invalidates old login proofs, blocks overlapping cha
   const operation = "33333333-3333-4333-8333-333333333333";
   try {
     await client.exec("CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE portfolio_app; CREATE ROLE portfolio_migrator; CREATE SCHEMA portfolio; CREATE TABLE portfolio.__drizzle_migrations(id serial PRIMARY KEY, hash text, created_at bigint);");
-    for (const file of ["0000_portfolio_schema", "0001_private_schema_permissions", "0002_youtube_videos", "0003_tough_weapon_omega"]) await client.exec(await readFile(`src/db/migrations/${file}.sql`, "utf8"));
+    for (const file of ["0000_portfolio_schema", "0001_private_schema_permissions", "0002_youtube_videos", "0003_tough_weapon_omega", "0004_social_custom_icons"]) await client.exec(await readFile(`src/db/migrations/${file}.sql`, "utf8"));
     await client.exec("SET ROLE anon");
     await assert.rejects(() => client.query("SELECT * FROM portfolio.owner_security"));
     await client.exec("RESET ROLE; SET ROLE authenticated");

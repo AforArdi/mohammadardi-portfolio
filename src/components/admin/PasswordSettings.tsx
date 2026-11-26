@@ -37,7 +37,7 @@ export default function PasswordSettings() {
   return <section className="max-w-xl rounded-xl border border-border bg-card/40 p-6 sm:p-8">
     <h1 className="font-mono text-2xl font-bold">Change password</h1>
     <p className="text-muted-foreground text-sm mt-3 mb-6">Confirm your current password and a fresh authenticator code. Changing your password signs you out of every dashboard session.</p>
-    {changed ? <p role="status" className="text-green-200">Password changed. Sign in again with your new password and authenticator.</p> : <form ref={form} onSubmit={submit} className="space-y-5">
+    {changed ? <p role="status" className="text-success">Password changed. Sign in again with your new password and authenticator.</p> : <form ref={form} onSubmit={submit} className="space-y-5">
       <fieldset disabled={busy || signInAgain || !factors.length} className="space-y-5 disabled:opacity-60">
         {[{ name: "currentPassword", label: "Current password", autoComplete: "current-password" }, { name: "newPassword", label: "New password", autoComplete: "new-password" }, { name: "confirmPassword", label: "Confirm new password", autoComplete: "new-password" }].map(field => <div key={field.name}><label className="block text-sm mb-2" htmlFor={field.name}>{field.label}</label><input className="input-field" id={field.name} name={field.name} type="password" autoComplete={field.autoComplete} required maxLength={256} minLength={field.name === "currentPassword" ? 1 : 12} /></div>)}
         <p className="text-xs text-muted-foreground">Use a unique password of at least 12 characters.</p>
@@ -46,7 +46,7 @@ export default function PasswordSettings() {
         <button className="btn-primary rounded-md" type="submit">{busy ? "Changing password…" : "Change password and sign out"}</button>
       </fieldset>
     </form>}
-    {error && <p role="alert" className="text-red-300 text-sm mt-5">{error}</p>}
+    {error && <p role="alert" className="text-danger text-sm mt-5">{error}</p>}
     {(signInAgain || changed) && <Link href="/admin/login" className="inline-block text-primary underline mt-5">Return to sign in</Link>}
   </section>;
 }
